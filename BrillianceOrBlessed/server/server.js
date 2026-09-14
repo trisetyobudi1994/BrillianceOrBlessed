@@ -1,84 +1,126 @@
+// server/server.js
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
-// 1. Perbaikan: Sesuaikan dengan nama file gameEngine.js
-const gameManager = require('./gameEngine');
+const GameEngine = require('./gameEngine');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: { origin: "*" }
+  cors: { origin: '*' }
 });
 
-// Menyajikan file statis dari folder client
 app.use(express.static(path.join(__dirname, '../client')));
 
+const rooms = new Map(); // roomId -> GameEngine
+
 io.on('connection', (socket) => {
-    console.log(`🔌 Player connected: ${socket.id}`);
+  console.log(`[Connect] Socket terhubung: ${socket.id}`);
 
-    // Create Room
-    socket.on('createRoom', (playerData) => {
-        const room = gameManager.createRoom(socket.id, playerData);
-        socket.join(room.code);
-        socket.emit('roomCreated', { roomCode: room.code, room });
-    });
+  // 1. Join / Create Room Realtime
+  socket.on('join_room', ({ roomId, name, avatar }) => {
+    let room = rooms.get(roomId);
+    if (!room) {
+      room = new GameEngine(roomId);
+      rooms.set(roomId, room);
+    }
 
-    // Join Room
-    socket.on('joinRoom', ({ code, playerData }) => {
-        const roomCode = code.toUpperCase();
-        const result = gameManager.joinRoom(roomCode, socket.id, playerData);
-        
-        if (result.error) {
-            socket.emit('errorMsg', result.error);
+    const joined = room.addPlayer(socket.id, name, avatar);
+    if (!joined) {
+      socket.emit('error_msg', 'Room sudah penuh!');
+      return;
+    }
+
+    socket.join(roomId);
+    socket.roomId = roomId;
+
+    // Siarkan pembaruan state ke seluruh klien di room
+    io.to(roomId).emit('room_state_update', room.getSnapshot());
+  });
+
+  // 2. Start Game Sync
+  socket.on('start_game', () => {
+    const room = rooms.get(socket.roomId);
+    if (room && room.startGame()) {
+      io.to(socket.roomId).emit('game_started', room.getSnapshot());
+    }
+  });
+
+  // 3. Spin Wheel Realtime Sync
+  socket.on('req_spin_wheel', () => {
+    const room = rooms.get(socket.roomId);
+    if (!room) return;
+
+    const spinResult = room.spinLuckyWheel(socket.id);
+    if (spinResult.success) {
+      // Disiarkan ke seluruh pemain untuk animasi berbarengan
+      io.to(socket.roomId).emit('wheel_spun', {
+        playerId: socket.id,
+        ...spinResult,
+        gameState: room.getSnapshot()
+      });
+    } else {
+      socket.emit('error_msg', spinResult.reason);
+    }
+  });
+
+  // 4. Sabotase Realtime
+  socket.on('use_sabotage', ({ targetId, itemId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room) return;
+
+    const result = room.useSabotage(socket.id, targetId, itemId);
+    if (result.success) {
+      io.to(socket.roomId).emit('sabotage_executed', {
+        ...result,
+        gameState: room.getSnapshot()
+      });
+    } else {
+      socket.emit('error_msg', result.reason);
+    }
+  });
+
+  // 5. Taunt & Emote Sync
+  socket.on('send_taunt', ({ emoteId }) => {
+    const room = rooms.get(socket.roomId);
+    if (!room) return;
+
+    const tauntRes = room.triggerTaunt(socket.id, emoteId);
+    if (tauntRes.success) {
+      io.to(socket.roomId).emit('taunt_received', tauntRes);
+    }
+  });
+
+  // Disconnect & Cleanup
+  socket.on('disconnect', () => {
+    console.log(`[Disconnect] Socket terputus: ${socket.id}`);
+    if (socket.roomId) {
+      const room = rooms.get(socket.roomId);
+      if (room) {
+        room.removePlayer(socket.id);
+        if (room.players.size === 0) {
+          rooms.delete(socket.roomId);
         } else {
-            socket.join(roomCode);
-            io.to(roomCode).emit('roomUpdated', { room: result.room });
+          io.to(socket.roomId).emit('room_state_update', room.getSnapshot());
         }
-    });
-
-    // Toggle Ready State
-    socket.on('toggleReady', ({ code }) => {
-        const room = gameManager.toggleReady(socket.id, code);
-        if (room) {
-            io.to(code).emit('roomUpdated', { room });
-        }
-    });
-
-    // Start Game
-    socket.on('startGame', ({ code }) => {
-        const room = gameManager.rooms.get(code);
-        if (room && room.hostId === socket.id) {
-            room.state = 'PLAYING';
-            io.to(code).emit('gameStarted');
-            gameManager.startRound(code, io);
-        }
-    });
-
-    // Answer Question
-    socket.on('submitAnswer', ({ code, answerIndex }) => {
-        gameManager.submitAnswer(code, socket.id, answerIndex, io);
-    });
-
-    // Sabotage Player
-    socket.on('useSabotage', ({ code, targetId, type }) => {
-        const result = gameManager.applySabotage(code, socket.id, targetId, type, io);
-        if (result.error) {
-            socket.emit('errorMsg', result.error);
-        }
-    });
-
-    // Disconnect Handling
-    socket.on('disconnect', () => {
-        console.log(`❌ Player disconnected: ${socket.id}`);
-        const result = gameManager.leaveRoom(socket.id);
-        if (result && result.room) {
-            io.to(result.code).emit('roomUpdated', { room: result.room });
-        }
-    });
+      }
+    }
+  });
 });
+
+// Periodic Sync Interval (State Authoritative Engine Check)
+setInterval(() => {
+  rooms.forEach((room, roomId) => {
+    if (room.gameState === 'PLAYING') {
+      io.to(roomId).emit('timer_tick', {
+        timeRemaining: room.timeRemaining,
+        currentTurn: room.getCurrentPlayerId()
+      });
+    }
+  });
+}, 1000);
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`🚀 Server Brilliance or Blessed 3.0 berjalan di port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`[Server] Berjalan di port ${PORT}`));
