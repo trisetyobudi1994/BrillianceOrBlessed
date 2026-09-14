@@ -11,41 +11,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository menggunakan v4
+      # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js menggunakan v4
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 3. Setup Java (Diperlukan untuk Gradle & Build Android APK)
+      # 3. Setup Java JDK
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      # 4. Install Capacitor & Buat Projek Android di dalam folder client
+      # 4. Install Dependencies & Copy index.html secara Otomatis
       - name: Install Dependencies & Prepare Capacitor
         run: |
           cd BrillianceOrBlessed/client
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npm run build
+          
+          # Buat folder www
+          mkdir -p www
+          
+          # Cari file index.html di mana pun posisinya dalam folder client lalu salin ke www/
+          find . -maxdepth 3 -iname "index.html" -exec cp {} www/ index.html \;
+          
+          # Inisialisasi Capacitor
           npx cap init "BrillianceOrBlessed" "com.brilliance.app" --web-dir www
           npx cap add android
           npx cap sync android
 
-      # 5. Build APK Debug menggunakan Gradle
+      # 5. Build APK Debug dengan Gradle
       - name: Build APK with Gradle
         run: |
           cd BrillianceOrBlessed/client/android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      # 6. Upload hasil APK menggunakan v4 (Sudah diperbarui dari v3)
+      # 6. Upload hasil APK ke GitHub Actions Artifacts
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
