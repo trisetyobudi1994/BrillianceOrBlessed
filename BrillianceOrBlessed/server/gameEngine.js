@@ -1,142 +1,218 @@
-// Database Soal (Server-Authoritative)
-const QUESTIONS = [
-    { id: 1, category: 'LOGIC', q: 'Jika 3 kucing bisa menangkap 3 tikus dalam 3 menit, berapa menit yang dibutuhkan 100 kucing untuk menangkap 100 tikus?', a: ['3 menit', '100 menit', '300 menit', '1 menit'], correct: 0 },
-    { id: 2, category: 'MATH', q: 'Berapakah hasil dari 8 + 8 / 4 * 2 - 1?', a: ['11', '7', '15', '3'], correct: 0 },
-    { id: 3, category: 'GENERAL', q: 'Planet manakah yang dikenal sebagai Planet Merah?', a: ['Mars', 'Venus', 'Jupiter', 'Saturnus'], correct: 0 },
-    { id: 4, category: 'SPEED', q: 'Manakah warna primer berikut ini?', a: ['Biru', 'Hijau', 'Jingga', 'Ungu'], correct: 0 },
-    { id: 5, category: 'MEMORY', q: 'Apa elemen pertama dalam tabel periodik?', a: ['Hidrogen', 'Helium', 'Oksigen', 'Karbon'], correct: 0 }
+// server/gameEngine.js
+
+const SABOTAGE_ITEMS = {
+  SWAP: { id: 'SWAP', name: 'Tukar Posisi', sfx: 'swap_whoosh' },
+  FREEZE: { id: 'FREEZE', name: 'Pembekuan (Skip Turn)', sfx: 'freeze_ice' },
+  TRAP: { id: 'TRAP', name: 'Jebakan Lumpur (-3 Langkah)', sfx: 'trap_splat' },
+  STEAL: { id: 'STEAL', name: 'Curi Poin (50% Gold)', sfx: 'steal_coins' }
+};
+
+const LUCKY_PATH_SLOTS = [
+  { type: 'MULTIPLIER', val: 2, label: '2x Gold', color: '#f39c12' },
+  { type: 'JACKPOT', val: 1000, label: 'JACKPOT!', color: '#e74c3c' },
+  { type: 'SABOTAGE', val: 'SWAP', label: 'Item Swap', color: '#9b59b6' },
+  { type: 'GOLD', val: 100, label: '+100 Gold', color: '#f1c40f' },
+  { type: 'NEAR_MISS', val: 0, label: 'Zonk!', color: '#7f8c8d' },
+  { type: 'SABOTAGE', val: 'FREEZE', label: 'Item Freeze', color: '#3498db' }
 ];
 
-class Room {
-    constructor(code, hostId, hostName, hostAvatar) {
-        this.code = code;
-        this.hostId = hostId;
-        this.players = {}; // socketId -> playerData
-        this.status = 'LOBBY'; // LOBBY, PLAYING, ENDED
-        this.currentRound = 0;
-        this.maxRounds = 5;
-        this.mode = 'smart'; // smart / lucky
-        this.currentQuestion = null;
-        this.roundTimer = null;
-        this.timeLeft = 10;
-        
-        this.addPlayer(hostId, hostName, hostAvatar, true);
+class GameEngine {
+  constructor(roomId) {
+    this.roomId = roomId;
+    this.players = new Map(); // socketId -> playerData
+    this.playerOrder = [];
+    this.currentTurnIndex = 0;
+    this.boardSize = 30;
+    this.gameState = 'WAITING'; // WAITING, PLAYING, FINISHED
+    this.turnTimer = null;
+    this.turnDuration = 15; // 15 detik per giliran
+    this.timeRemaining = 15;
+  }
+
+  addPlayer(socketId, name, avatar) {
+    if (this.players.size >= 4) return false;
+    this.players.set(socketId, {
+      id: socketId,
+      name: name || `Pemain ${this.players.size + 1}`,
+      avatar: avatar || 'default_avatar.png',
+      position: 0,
+      gold: 500,
+      isFrozen: false,
+      inventory: ['SWAP', 'FREEZE'],
+      tauntCooldown: 0
+    });
+    this.playerOrder.push(socketId);
+    return true;
+  }
+
+  removePlayer(socketId) {
+    this.players.delete(socketId);
+    this.playerOrder = this.playerOrder.filter(id => id !== socketId);
+    if (this.players.size === 0) {
+      this.stopTimer();
+    }
+  }
+
+  startGame() {
+    if (this.players.size < 2) return false;
+    this.gameState = 'PLAYING';
+    this.currentTurnIndex = 0;
+    this.startTurnTimer();
+    return true;
+  }
+
+  getCurrentPlayerId() {
+    return this.playerOrder[this.currentTurnIndex];
+  }
+
+  startTurnTimer() {
+    this.stopTimer();
+    this.timeRemaining = this.turnDuration;
+    
+    // Cek status pembekuan giliran
+    const currId = this.getCurrentPlayerId();
+    const player = this.players.get(currId);
+    if (player && player.isFrozen) {
+      player.isFrozen = false;
+      this.nextTurn();
+      return;
     }
 
-    addPlayer(id, name, avatar, isHost = false) {
-        if (Object.keys(this.players).length >= 8) return false;
-        this.players[id] = {
-            id,
-            name: name || 'Pemain',
-            avatar: avatar || '🧠',
-            score: 0,
-            isReady: isHost,
-            isHost,
-            sabotageReceived: 0,
-            hasAnswered: false,
-            effects: [] // active sabotage effects
-        };
-        return true;
+    this.turnTimer = setInterval(() => {
+      this.timeRemaining -= 1;
+      if (this.timeRemaining <= 0) {
+        this.nextTurn();
+      }
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.turnTimer) clearInterval(this.turnTimer);
+  }
+
+  nextTurn() {
+    this.currentTurnIndex = (this.currentTurnIndex + 1) % this.playerOrder.length;
+    this.startTurnTimer();
+  }
+
+  // Spin Lucky Path / Roda Kemenangan
+  spinLuckyWheel(socketId) {
+    if (socketId !== this.getCurrentPlayerId()) return { success: false, reason: 'Bukan giliranmu!' };
+
+    // Kalkulasi Acak Server Side
+    const randomIndex = Math.floor(Math.random() * LUCKY_PATH_SLOTS.length);
+    const resultSlot = LUCKY_PATH_SLOTS[randomIndex];
+    const player = this.players.get(socketId);
+
+    // Proses efek reward
+    if (resultSlot.type === 'GOLD') player.gold += resultSlot.val;
+    if (resultSlot.type === 'JACKPOT') player.gold += resultSlot.val;
+    if (resultSlot.type === 'MULTIPLIER') player.gold *= resultSlot.val;
+    if (resultSlot.type === 'SABOTAGE') player.inventory.push(resultSlot.val);
+
+    // Langkah otomatis berdasarkan spin
+    const steps = Math.floor(Math.random() * 6) + 1;
+    player.position = Math.min(this.boardSize, player.position + steps);
+
+    const isWinner = player.position >= this.boardSize;
+    if (isWinner) {
+      this.gameState = 'FINISHED';
+      this.stopTimer();
+    } else {
+      this.nextTurn();
     }
 
-    removePlayer(id) {
-        delete this.players[id];
-        // Assign new host if host leaves
-        const pIds = Object.keys(this.players);
-        if (pIds.length > 0 && !Object.values(this.players).some(p => p.isHost)) {
-            this.players[pIds[0]].isHost = true;
-            this.players[pIds[0]].isReady = true;
-            this.hostId = pIds[0];
-        }
+    return {
+      success: true,
+      slotIndex: randomIndex,
+      slotResult: resultSlot,
+      steps: steps,
+      newPosition: player.position,
+      isWinner: isWinner
+    };
+  }
+
+  // Menjalankan Aksi Sabotase terhadap Pemain Lain
+  useSabotage(attackerId, targetId, itemId) {
+    if (attackerId !== this.getCurrentPlayerId()) return { success: false, reason: 'Bukan giliranmu!' };
+
+    const attacker = this.players.get(attackerId);
+    const target = this.players.get(targetId);
+
+    if (!attacker || !target) return { success: false, reason: 'Pemain tidak ditemukan!' };
+
+    const itemIdx = attacker.inventory.indexOf(itemId);
+    if (itemIdx === -1) return { success: false, reason: 'Kamu tidak memiliki item ini!' };
+
+    // Hapus item dari inventaris
+    attacker.inventory.splice(itemIdx, 1);
+
+    let effectSummary = '';
+
+    switch (itemId) {
+      case 'SWAP':
+        const tempPos = attacker.position;
+        attacker.position = target.position;
+        target.position = tempPos;
+        effectSummary = `${attacker.name} menukar posisi dengan${target.name}!`;
+        break;
+
+      case 'FREEZE':
+        target.isFrozen = true;
+        effectSummary = `${target.name} dibekukan untuk 1 giliran berikutnya!`;
+        break;
+
+      case 'TRAP':
+        target.position = Math.max(0, target.position - 3);
+        effectSummary = `${target.name} terkena jebakan lumpur dan mundur 3 langkah!`;
+        break;
+
+      case 'STEAL':
+        const stolenAmount = Math.floor(target.gold * 0.3);
+        target.gold -= stolenAmount;
+        attacker.gold += stolenAmount;
+        effectSummary = `${attacker.name} mencuri ${stolenAmount} Gold dari${target.name}!`;
+        break;
     }
 
-    toggleReady(id) {
-        if (this.players[id] && !this.players[id].isHost) {
-            this.players[id].isReady = !this.players[id].isReady;
-        }
+    return {
+      success: true,
+      itemId: itemId,
+      attackerId: attackerId,
+      targetId: targetId,
+      effectSummary: effectSummary
+    };
+  }
+
+  // Sistem Taunt & Emote
+  triggerTaunt(socketId, emoteId) {
+    const player = this.players.get(socketId);
+    if (!player) return null;
+
+    const now = Date.now();
+    if (player.tauntCooldown && now < player.tauntCooldown) {
+      return { success: false, reason: 'Taunt sedang cooldown!' };
     }
 
-    canStart() {
-        const playerList = Object.values(this.players);
-        return playerList.length >= 1 && playerList.every(p => p.isReady);
-    }
+    player.tauntCooldown = now + 3000; // Cooldown 3 detik
 
-    getLeaderboard() {
-        return Object.values(this.players)
-            .map(p => ({
-                id: p.id,
-                name: p.name,
-                avatar: p.avatar,
-                score: p.score,
-                isReady: p.isReady,
-                isHost: p.isHost,
-                sabotageReceived: p.sabotageReceived
-            }))
-            .sort((a, b) => b.score - a.score);
-    }
+    return {
+      success: true,
+      senderId: socketId,
+      senderName: player.name,
+      emoteId: emoteId
+    };
+  }
 
-    nextRound() {
-        this.currentRound++;
-        if (this.currentRound > this.maxRounds) {
-            this.status = 'ENDED';
-            return null;
-        }
-
-        // Reset state ronde per pemain
-        Object.values(this.players).forEach(p => {
-            p.hasAnswered = false;
-            p.effects = [];
-        });
-
-        this.timeLeft = 10;
-        this.currentQuestion = QUESTIONS[(this.currentRound - 1) % QUESTIONS.length];
-        return this.currentQuestion;
-    }
-
-    submitAnswer(playerId, answerIndex, timeRemaining) {
-        const player = this.players[playerId];
-        if (!player || player.hasAnswered || this.status !== 'PLAYING') return 0;
-
-        player.hasAnswered = true;
-        let gained = 0;
-
-        if (answerIndex === this.currentQuestion.correct) {
-            // Kalkulasi skor berbasis waktu + bonus
-            gained = 100 + (timeRemaining * 10);
-            
-            // Pengaruh Sabotage GLITCH (-50% Poin)
-            if (player.effects.includes('GLITCH')) {
-                gained = Math.floor(gained * 0.5);
-            }
-            player.score += gained;
-        }
-
-        return gained;
-    }
-
-    applySabotage(attackerId, targetId, type) {
-        const target = this.players[targetId];
-        const attacker = this.players[attackerId];
-
-        if (!target || !attacker) return { success: false, reason: 'Pemain tidak ditemukan' };
-        if (target.sabotageReceived >= 3) {
-            return { success: false, reason: 'Pemain ini sudah mencapai batas 3x sabotase!' };
-        }
-
-        target.sabotageReceived++;
-        target.effects.push(type);
-
-        if (type === 'SHUFFLE') {
-            target.score = Math.max(0, target.score - 50);
-        }
-
-        return { 
-            success: true, 
-            targetName: target.name, 
-            attackerName: attacker.name, 
-            type 
-        };
-    }
+  getSnapshot() {
+    return {
+      roomId: this.roomId,
+      gameState: this.gameState,
+      currentTurn: this.getCurrentPlayerId(),
+      timeRemaining: this.timeRemaining,
+      players: Array.from(this.players.values())
+    };
+  }
 }
 
-module.exports = { Room, QUESTIONS };
+module.exports = GameEngine;
