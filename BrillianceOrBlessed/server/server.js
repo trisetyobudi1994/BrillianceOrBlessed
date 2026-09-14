@@ -39,7 +39,6 @@ function getOrCreateRoom(roomId) {
 io.on('connection', (socket) => {
   console.log(`🎮 Player Connected: ${socket.id}`);
 
-  // FIX 1: Menerima 'phone' dari client
   socket.on('join_room', ({ roomId, phone, name }) => {
     const targetRoomId = roomId || 'room_main';
     const room = getOrCreateRoom(targetRoomId);
@@ -49,7 +48,6 @@ io.on('connection', (socket) => {
 
     const playerName = name || (phone ? `Hero_${phone.slice(-4)}` : `Hero_${socket.id.slice(0, 4)}`);
     
-    // Memasukkan player (mengoper phone jika GameEngine mendukung simpan No. HP)
     const added = room.addPlayer(socket.id, playerName, phone);
     if (!added) return socket.emit('error_message', 'Room penuh!');
 
@@ -119,7 +117,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// FIX 2: Endpoint Payment Charge (Menerima parameter dari client)
+// Endpoint Payment Charge
 app.post('/api/payment/charge', (req, res) => {
   const { phone, amount, goldAmount } = req.body;
   
@@ -127,8 +125,7 @@ app.post('/api/payment/charge', (req, res) => {
     return res.status(400).json({ success: false, message: 'Data tidak lengkap' });
   }
 
-  // TODO: Hubungkan ke SDK Midtrans Snap di sini jika sudah ada Server Key.
-  // Untuk saat ini merespons success dengan token dummy agar UI Snap Midtrans (Sandbox) terpanggil.
+  // Integrasikan Midtrans Snap SDK di sini jika menggunakan Server Key asli.
   res.json({ 
     success: true, 
     token: 'SNAP_TOKEN_DUMMY', 
