@@ -19,20 +19,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
 
-      # 3. Setup Java JDK 21
-      - name: Setup Java JDK 21
+      # 3. Setup Java JDK
+      - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          distribution: 'zulu'
+          java-version: '17'
 
-      # 4. Prepare Client, Package.json, & Capacitor
+      # 4. Prepare Client & Capacitor
       - name: Install Dependencies & Prepare Capacitor
         run: |
           cd BrillianceOrBlessed/client
-
+          
           if [ ! -f package.json ]; then
             echo '{"name": "brilliance-client", "version": "1.0.0"}' > package.json
           fi
@@ -41,47 +41,29 @@ jobs:
           find . -maxdepth 3 -iname "index.html" -not -path "./www/*" -exec cp {} www/index.html \;
 
           npm install @capacitor/core @capacitor/cli @capacitor/android
-
+          
           npx cap init "BrillianceOrBlessed" "com.brilliance.app" --web-dir www
           npx cap add android
           npx cap sync android
 
-      # 5. Konfigurasi Gradle (Blacklist Jetifier + Upgrade Gradle ke 8.11.1)
-      - name: Configure Gradle Properties
+      # 5. Fix Deprecated Jetifier Properties
+      - name: Fix gradle.properties
         run: |
-          cd BrillianceOrBlessed/client/android
+          PROPERTIES_FILE="BrillianceOrBlessed/client/android/gradle.properties"
+          if [ -f "$PROPERTIES_FILE" ]; then
+            sed -i 's/android.jetifier.blacklist/android.jetifier.ignorelist/g' "$PROPERTIES_FILE"
+          fi
 
-          # 5a. Blacklist Jetifier untuk Bouncy Castle
-          echo "" >> gradle.properties
-          echo "# Fix untuk bcprov-jdk18on error" >> gradle.properties
-          echo "android.jetifier.blacklist=bcprov-jdk18on" >> gradle.properties
-          echo "android.jetifier.ignorelist=bcprov-jdk18on" >> gradle.properties
-
-          # 5b. Upgrade Gradle ke 8.11.1
-          sed -i 's|gradle-.*-all.zip|gradle-8.11.1-all.zip|' gradle/wrapper/gradle-wrapper.properties
-          sed -i 's|gradle-.*-bin.zip|gradle-8.11.1-bin.zip|' gradle/wrapper/gradle-wrapper.properties
-
-          echo "=== gradle.properties ==="
-          cat gradle.properties
-          echo ""
-          echo "=== gradle-wrapper.properties ==="
-          cat gradle/wrapper/gradle-wrapper.properties
-
-      # 6. Clean & Build APK Debug
-      - name: Clean Gradle Cache
-        run: rm -rf ~/.gradle/caches/
-
+      # 6. Build APK Debug dengan Gradle
       - name: Build APK with Gradle
         run: |
           cd BrillianceOrBlessed/client/android
           chmod +x gradlew
-          ./gradlew clean
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug
 
-      # 7. Upload hasil APK
+      # 7. Upload hasil APK ke GitHub Actions Artifacts
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: game-apk
           path: BrillianceOrBlessed/client/android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
