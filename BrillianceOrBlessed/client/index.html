@@ -952,7 +952,7 @@ h1{
     border:1px solid var(--cyan);
     border-radius:13px;
     box-shadow:var(--shadow);
-    z-index:100;
+    z-index:10000;
     opacity:0;
     transition:.3s;
     font-size:13px;
@@ -1039,6 +1039,96 @@ h1{
     animation:fall 2.2s linear forwards;
 }
 
+/* ===== LOGIN SCREEN ===== */
+#login-screen{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:
+        radial-gradient(circle at 50% 25%,rgba(25,217,255,.14),transparent 55%),
+        radial-gradient(circle at 80% 80%,rgba(155,108,255,.12),transparent 55%),
+        rgba(2,7,17,.94);
+    backdrop-filter:blur(12px);
+}
+
+#login-screen.show{
+    display:flex;
+}
+
+.loginCard{
+    width:min(370px,100%);
+    padding:30px 24px;
+    border-radius:22px;
+    border:1px solid var(--line);
+    background:linear-gradient(145deg,#0b1f34,#061321);
+    box-shadow:var(--shadow);
+    text-align:center;
+    animation:float 3s ease-in-out infinite;
+}
+
+.loginCard .logoIcon{
+    margin:0 auto 14px;
+}
+
+.loginCard h3{
+    font-size:19px;
+    margin-bottom:6px;
+}
+
+.loginCard p{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.5;
+    margin-bottom:18px;
+}
+
+.loginInput{
+    width:100%;
+    padding:13px 14px;
+    border-radius:13px;
+    border:1px solid var(--line);
+    background:#061525;
+    color:var(--white);
+    font:inherit;
+    font-weight:700;
+    outline:none;
+    margin-bottom:12px;
+    transition:.2s;
+}
+
+.loginInput:focus{
+    border-color:var(--cyan);
+    box-shadow:0 0 0 3px rgba(25,217,255,.12);
+}
+
+.loginInput::placeholder{
+    color:#5d7a91;
+}
+
+.loginBtn{
+    width:100%;
+    padding:14px;
+    border-radius:13px;
+    font-weight:1000;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    box-shadow:0 10px 30px rgba(25,217,255,.18);
+    transition:.2s;
+}
+
+.loginBtn:hover{
+    transform:translateY(-2px);
+}
+
+.loginNote{
+    margin-top:14px;
+    font-size:10px;
+    color:var(--muted);
+}
+
 @keyframes fall{
     to{
         transform:translateY(110vh) rotate(720deg);
@@ -1104,6 +1194,7 @@ h1{
     </div>
 
     <div class="wallet">
+        <div class="walletItem">👤 <span id="headerName">Guest</span></div>
         <div class="walletItem">🪙 <span id="coins">500</span></div>
         <div class="walletItem">💎 <span id="gems">25</span></div>
         <div class="walletItem">⭐ LV <span id="level">1</span></div>
@@ -1547,6 +1638,11 @@ h1{
             <h3>🎯 Player Information</h3>
 
             <p style="color:var(--muted);margin-top:10px">
+                Nama:
+                <strong id="profileName"></strong>
+            </p>
+
+            <p style="color:var(--muted);margin-top:8px">
                 Avatar:
                 <strong id="profileAvatar"></strong>
             </p>
@@ -1576,6 +1672,22 @@ h1{
         <div class="pageHead">
             <h2>⚙️ SETTINGS</h2>
             <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div class="settingsRow">
+
+            <div>
+                <b>👤 Nama Pemain</b>
+                <small style="display:block;color:var(--muted)">
+                    Ganti nama tampilan kamu
+                </small>
+            </div>
+
+            <button class="actionBtn"
+                    onclick="changeUsername()">
+                GANTI
+            </button>
+
         </div>
 
         <div class="settingsRow">
@@ -1675,6 +1787,31 @@ h1{
 </div>
 
 
+<!-- ===== LAYAR LOGIN / INPUT NAMA ===== -->
+<div id="login-screen">
+    <div class="loginCard">
+        <div class="logoIcon">🧠</div>
+        <h3>Masukkan Nama Pemain</h3>
+        <p>Nama ini akan tampil di leaderboard dan saat bertanding.</p>
+
+        <input type="text"
+               id="username-input"
+               class="loginInput"
+               maxlength="16"
+               placeholder="Nama kamu..."
+               autocomplete="off">
+
+        <button class="loginBtn" onclick="saveUsername()">
+            ▶ MULAI MAIN
+        </button>
+
+        <div class="loginNote">
+            💡 Nama tersimpan otomatis di browser kamu.
+        </div>
+    </div>
+</div>
+
+
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
 
@@ -1714,7 +1851,39 @@ h1{
 </div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>const socket = io('https://brillianceorblessed-production.up.railway.app');</script>
+<script>
+/* Koneksi socket dibuat setelah user login */
+let socket = null;
+
+const SERVER_URL = 'https://brillianceorblessed-production.up.railway.app';
+
+function connectSocket(username){
+
+    if(socket) return socket;
+
+    try{
+
+        socket = io(SERVER_URL, {
+            transports: ['websocket','polling']
+        });
+
+        socket.on('connect', () => {
+            socket.emit('join_game', { name: username });
+            console.log('✅ Terhubung ke server sebagai: '+username);
+        });
+
+        socket.on('connect_error', () => {
+            /* Mode offline — game tetap bisa dimainkan */
+            console.warn('⚠️ Server tidak terjangkau, bermain offline.');
+        });
+
+    }catch(e){
+        socket = null;
+    }
+
+    return socket;
+}
+</script>
 <script>
 
 /* =========================================================
@@ -1722,8 +1891,10 @@ h1{
    ========================================================= */
 
 const KEY="bob_v3";
+const USER_KEY="bob_username";
 
 const defaultState={
+    username:"",
     coins:500,
     gems:25,
     xp:0,
@@ -2003,6 +2174,94 @@ function openModeSelect(){
 
 
 /* =========================================================
+   LOGIN / USERNAME
+   ========================================================= */
+
+function getSavedUsername(){
+    return localStorage.getItem(USER_KEY)||"";
+}
+
+function showLogin(){
+
+    const el=document.getElementById("login-screen");
+
+    if(!el) return;
+
+    el.classList.add("show");
+
+    const input=document.getElementById("username-input");
+
+    if(input){
+        input.value=state.username||getSavedUsername()||"";
+        setTimeout(()=>input.focus(),150);
+    }
+
+}
+
+function hideLogin(){
+
+    const el=document.getElementById("login-screen");
+
+    if(el) el.classList.remove("show");
+
+}
+
+function saveUsername(){
+
+    const input=document.getElementById("username-input");
+
+    const value=(input.value||"")
+        .trim()
+        .replace(/\s+/g," ")
+        .slice(0,16);
+
+    if(value===""){
+        toast("⚠️ Nama tidak boleh kosong!");
+        input.focus();
+        return;
+    }
+
+    /* Simpan ke memori browser */
+    localStorage.setItem(USER_KEY,value);
+
+    state.username=value;
+    saveState();
+
+    updatePlayerName();
+
+    hideLogin();
+
+    initGame(value);
+
+}
+
+function changeUsername(){
+    showLogin();
+}
+
+function initGame(username){
+
+    console.log("🎮 Game dimulai oleh: "+username);
+
+    /* Kirim nama pemain ke server Railway via Socket.IO */
+    connectSocket(username);
+
+    toast("👋 Selamat datang, "+username+"!");
+
+}
+
+function updatePlayerName(){
+
+    const name=state.username||"Guest";
+
+    const header=document.getElementById("headerName");
+
+    if(header) header.textContent=name;
+
+}
+
+
+/* =========================================================
    START GAME
    ========================================================= */
 
@@ -2091,7 +2350,7 @@ function renderGamePlayers(){
                 🛡️ ${game.incomingHits}/3
             </div>
             <div class="playerAvatar">${avatars[state.selectedAvatar][0]}</div>
-            <div class="playerName">YOU</div>
+            <div class="playerName">${state.username||"YOU"}</div>
             <div class="playerScore">🪙 ${game.score}</div>
         </div>
     `;
@@ -3325,6 +3584,7 @@ function finishGame(){
     clearGameTimers();
 
     const aiScores=state.ai.map(ai=>({
+        id:ai.name,
         name:ai.name,
         avatar:ai.avatar,
         score:ai.score
@@ -3332,7 +3592,8 @@ function finishGame(){
 
     const all=[
         {
-            name:"YOU",
+            id:"you",
+            name:state.username||"YOU",
             avatar:avatars[state.selectedAvatar][0],
             score:game.score
         },
@@ -3342,7 +3603,7 @@ function finishGame(){
     all.sort((a,b)=>b.score-a.score);
 
     const position=
-        all.findIndex(x=>x.name==="YOU")+1;
+        all.findIndex(x=>x.id==="you")+1;
 
     const win=position===1;
 
@@ -3571,9 +3832,11 @@ function renderLeaderboard(){
 
     ];
 
+    const myName = state.username||"YOU";
+
     const user=[
         "🏅",
-        "YOU",
+        myName,
         avatars[state.selectedAvatar][0],
         state.bestScore
     ];
@@ -3586,7 +3849,7 @@ function renderLeaderboard(){
         list.map((p,i)=>`
 
             <div class="leader ${
-                p[1]==="YOU"?"rank1":""
+                p[1]===myName?"rank1":""
             }">
 
                 <div class="rank">
@@ -3621,6 +3884,11 @@ function renderProfile(){
     const el=id=>document.getElementById(id);
 
     if(!el("profileLevel")) return;
+
+    if(el("profileName")){
+        el("profileName").textContent=
+            state.username||"Guest";
+    }
 
     el("profileLevel").textContent=state.level;
     el("profileWins").textContent=state.wins;
@@ -3888,10 +4156,11 @@ function confirmExit(){
 function resetData(){
 
     if(!confirm(
-        "Reset semua data Brilliance or Blessed?"
+        "Reset semua data Brilliance or Blessed?\n\nTermasuk nama pemain dan progress."
     )) return;
 
     localStorage.removeItem(KEY);
+    localStorage.removeItem(USER_KEY);
 
     location.reload();
 
@@ -3985,11 +4254,49 @@ function init(){
     renderInventory();
     renderProfile();
     renderAvatars();
+    updatePlayerName();
 
     const sw=
         document.getElementById("soundSwitch");
 
     sw.classList.toggle("on",state.sound);
+
+    /* Enter = submit login */
+    const loginInput=
+        document.getElementById("username-input");
+
+    if(loginInput){
+
+        loginInput.addEventListener("keydown",e=>{
+
+            if(e.key==="Enter") saveUsername();
+
+        });
+
+    }
+
+    /* ---- CEK APAKAH SUDAH PERNAH LOGIN ---- */
+
+    const savedName=
+        state.username||getSavedUsername();
+
+    if(savedName){
+
+        state.username=savedName;
+
+        localStorage.setItem(USER_KEY,savedName);
+
+        updatePlayerName();
+
+        hideLogin();
+
+        initGame(savedName);
+
+    }else{
+
+        showLogin();
+
+    }
 
 }
 
