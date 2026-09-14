@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Brilliance or Blessed - Professional Esport Arena</title>
+  
+  <!-- Socket.io & Midtrans Client Libraries -->
   <script src="/socket.io/socket.io.js"></script>
   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-YOUR_CLIENT_KEY"></script>
   
@@ -273,14 +275,30 @@
     // ==========================================
     // SOCKET & GAME LOGIC
     // ==========================================
-    const SOCKET_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-      ? 'http://localhost:3000' 
+    
+    // DETEKSI OTOMATIS: Menggunakan host saat ini jika diakses via Web/APK, 
+    // atau fallback ke Railway / Local Server jika berjalan terpisah.
+    const SOCKET_URL = window.location.origin.includes('http') && !window.location.origin.includes('file://')
+      ? window.location.origin
       : 'https://brillianceorblessed-production.up.railway.app';
 
-    const socket = io(SOCKET_URL);
+    // Inisialisasi Socket connection
+    const socket = (typeof io !== 'undefined') ? io(SOCKET_URL) : null;
     let currentGameState = null;
     let currentUser = null;
     const boardCanvas = document.getElementById('board-canvas');
+
+    if (!socket) {
+      console.error("Socket.io library tidak berhasil dimuat.");
+    } else {
+      socket.on('connect', () => {
+        showToast("Connected to Server ID: " + socket.id);
+      });
+
+      socket.on('connect_error', (err) => {
+        showToast("Gagal terhubung ke server backend!");
+      });
+    }
 
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
@@ -300,27 +318,38 @@
       playSFX(880, 'sine', 0.4);
       startBGM();
 
+      // Transisi UI dari Main Menu ke Game Arena
       document.getElementById('main-menu').style.display = 'none';
       document.getElementById('game-wrapper').style.display = 'flex';
       document.getElementById('player-title').innerText = name;
 
-      const roomId = mode === 'solo' ? 'room_solo_' + socket.id : 'room_main';
-      socket.emit('join_room', { roomId, phone, name });
-      showToast(`Connected to Arena: ${name}`);
+      const roomId = mode === 'solo' ? 'room_solo_' + (socket ? socket.id : Date.now()) : 'room_main';
+      
+      if (socket) {
+        // Mengirimkan event bergabung ke room
+        socket.emit('join_room', { roomId, phone, name, mode });
+        socket.emit('join_game', { roomId, phone, name, mode }); // Backup event kompatibilitas
+      }
+      
+      showToast(`Entering Arena: ${name}`);
     }
 
     async function buyGold(amount, gold) {
       if (!currentUser) return;
-      const res = await fetch('/api/payment/charge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: currentUser.phone, amount, goldAmount: gold })
-      });
-      const data = await res.json();
-      if (data.success) {
-        snap.pay(data.token, {
-          onSuccess: function() { playSFX(1200, 'triangle', 0.5); showToast('Topup Diamond Berhasil!'); }
+      try {
+        const res = await fetch('/api/payment/charge', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentUser.phone, amount, goldAmount: gold })
         });
+        const data = await res.json();
+        if (data.success && typeof snap !== 'undefined') {
+          snap.pay(data.token, {
+            onSuccess: function() { playSFX(1200, 'triangle', 0.5); showToast('Topup Diamond Berhasil!'); }
+          });
+        }
+      } catch (err) {
+        showToast('Fitur Topup tidak tersedia');
       }
     }
 
@@ -349,7 +378,11 @@
         }
 
         ctx.beginPath();
-        ctx.roundRect(x, y, 64, 58, 10);
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, 64, 58, 10);
+        } else {
+          ctx.rect(x, y, 64, 58);
+        }
         ctx.fill();
 
         ctx.shadowBlur = 0;
@@ -383,72 +416,74 @@
 
     function sendTaunt(emote) {
       playSFX(750, 'square', 0.15);
-      socket.emit('send_taunt', { emoteId: emote });
+      if (socket) socket.emit('send_taunt', { emoteId: emote });
     }
 
-    socket.on('taunt_received', (data) => {
-      const container = document.getElementById('game-container');
-      const bubble = document.createElement('div');
-      bubble.className = 'emote-bubble';
-      bubble.innerText = `${data.senderName}: ${data.emoteId}`;
-      bubble.style.left = `${Math.random() * 50 + 25}%`;
-      bubble.style.top = `${Math.random() * 50 + 20}%`;
-      container.appendChild(bubble);
-      setTimeout(() => bubble.remove(), 2200);
-    });
+    if (socket) {
+      socket.on('taunt_received', (data) => {
+        const container = document.getElementById('game-container');
+        const bubble = document.createElement('div');
+        bubble.className = 'emote-bubble';
+        bubble.innerText = `${data.senderName}: ${data.emoteId}`;
+        bubble.style.left = `${Math.random() * 50 + 25}%`;
+        bubble.style.top = `${Math.random() * 50 + 20}%`;
+        container.appendChild(bubble);
+        setTimeout(() => bubble.remove(), 2200);
+      });
+
+      socket.on('wheel_spun', (data) => {
+        const wheelCanvas = document.getElementById('wheel-canvas');
+        wheelCanvas.style.transform = `rotate(${1440 + (data.slotIndex * 60)}deg)`;
+
+        setTimeout(() => {
+          playSFX(950, 'triangle', 0.4);
+          wheelCanvas.style.transform = 'rotate(0deg)';
+
+          if (data.triggerQuiz && data.quizPrompt) {
+            document.getElementById('quiz-question').innerText = data.quizPrompt.question;
+            document.getElementById('quiz-img').src = data.quizPrompt.imageUrl;
+            data.quizPrompt.options.forEach((optText, idx) => {
+              document.getElementById(`opt-${idx}`).innerText = optText;
+            });
+            document.getElementById('quiz-modal').style.display = 'flex';
+          }
+        }, 4000);
+      });
+
+      socket.on('quiz_result', (res) => showToast(res.message));
+
+      socket.on('sabotage_executed', (data) => {
+        playSFX(300, 'sawtooth', 0.4);
+        showToast(data.effectSummary);
+      });
+
+      socket.on('room_state_update', (state) => {
+        currentGameState = state;
+        updateUI();
+      });
+    }
 
     function spinWheel() {
       playSFX(500, 'sawtooth', 0.3);
-      socket.emit('req_spin_wheel');
+      if (socket) socket.emit('req_spin_wheel');
     }
-
-    socket.on('wheel_spun', (data) => {
-      const wheelCanvas = document.getElementById('wheel-canvas');
-      wheelCanvas.style.transform = `rotate(${1440 + (data.slotIndex * 60)}deg)`;
-
-      setTimeout(() => {
-        playSFX(950, 'triangle', 0.4);
-        wheelCanvas.style.transform = 'rotate(0deg)';
-
-        if (data.triggerQuiz && data.quizPrompt) {
-          document.getElementById('quiz-question').innerText = data.quizPrompt.question;
-          document.getElementById('quiz-img').src = data.quizPrompt.imageUrl;
-          data.quizPrompt.options.forEach((optText, idx) => {
-            document.getElementById(`opt-${idx}`).innerText = optText;
-          });
-          document.getElementById('quiz-modal').style.display = 'flex';
-        }
-      }, 4000);
-    });
 
     function answerQuiz(optIndex) {
       playSFX(1200, 'sine', 0.3);
-      socket.emit('submit_quiz_answer', { selectedIndex: optIndex });
+      if (socket) socket.emit('submit_quiz_answer', { selectedIndex: optIndex });
       document.getElementById('quiz-modal').style.display = 'none';
     }
 
-    socket.on('quiz_result', (res) => showToast(res.message));
-
     function triggerSabotage(targetId, itemId) {
-      socket.emit('req_use_sabotage', { targetId, itemId });
+      if (socket) socket.emit('req_use_sabotage', { targetId, itemId });
     }
-
-    socket.on('sabotage_executed', (data) => {
-      playSFX(300, 'sawtooth', 0.4);
-      showToast(data.effectSummary);
-    });
-
-    socket.on('room_state_update', (state) => {
-      currentGameState = state;
-      updateUI();
-    });
 
     function updateUI() {
       if (!currentGameState) return;
       const list = document.getElementById('player-list');
       list.innerHTML = '';
 
-      const me = currentGameState.players.find(p => p.id === socket.id);
+      const me = currentGameState.players.find(p => p.id === (socket ? socket.id : ''));
       if (me && me.isFrozen) {
         document.getElementById('freeze-overlay').style.display = 'flex';
       } else {
@@ -460,7 +495,7 @@
         div.style.cssText = "background: var(--card-gradient); padding:6px 10px; border-radius:6px; border:1px solid rgba(0,240,255,0.2); font-size:11px; display:flex; justify-content:space-between; align-items:center;";
         
         let sabotageBtns = '';
-        if (p.id !== socket.id && currentGameState.currentTurn === socket.id) {
+        if (socket && p.id !== socket.id && currentGameState.currentTurn === socket.id) {
           sabotageBtns = `<span><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'SWAP')">SWAP</button><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'FREEZE')">ICE</button></span>`;
         }
 
@@ -472,7 +507,7 @@
       const turnIndicator = document.getElementById('turn-indicator');
 
       if (currentGameState.gameState === 'PLAYING') {
-        if (currentGameState.currentTurn === socket.id) {
+        if (socket && currentGameState.currentTurn === socket.id) {
           modal.style.display = 'flex';
           turnIndicator.innerText = `YOUR TURN! (${currentGameState.timeRemaining}s)`;
           turnIndicator.style.color = '#00f0ff';
