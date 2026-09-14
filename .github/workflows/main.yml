@@ -15,20 +15,19 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Dependencies
+      # Pindah ke direktori client dan jalankan build
+      - name: Install Dependencies & Build
         run: |
+          cd BrillianceOrBlessed/client
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npm run build
-
-      - name: Initialize Capacitor
-        run: |
-          npx cap init "NamaGame" "com.namagame.app" --web-dir www
+          npx cap init "BrillianceOrBlessed" "com.brilliance.app" --web-dir www
           npx cap add android
           npx cap sync android
 
       - name: Build APK with Gradle
         run: |
-          cd android
+          cd BrillianceOrBlessed/client/android
           chmod +x gradlew
           ./gradlew assembleDebug
 
@@ -36,4 +35,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: game-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: BrillianceOrBlessed/client/android/app/build/outputs/apk/debug/app-debug.apk
