@@ -3,20 +3,33 @@ name: Build Android APK
 on:
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
+    steps:
+      # 1. Checkout repository menggunakan v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js menggunakan v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # Pindah ke direktori client dan jalankan build
-      - name: Install Dependencies & Build
+      # 3. Setup Java (Diperlukan untuk Gradle & Build Android APK)
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 4. Install Capacitor & Buat Projek Android di dalam folder client
+      - name: Install Dependencies & Prepare Capacitor
         run: |
           cd BrillianceOrBlessed/client
           npm install @capacitor/core @capacitor/cli @capacitor/android
@@ -25,14 +38,16 @@ jobs:
           npx cap add android
           npx cap sync android
 
+      # 5. Build APK Debug menggunakan Gradle
       - name: Build APK with Gradle
         run: |
           cd BrillianceOrBlessed/client/android
           chmod +x gradlew
           ./gradlew assembleDebug
 
+      # 6. Upload hasil APK menggunakan v4 (Sudah diperbarui dari v3)
       - name: Upload APK Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: game-apk
           path: BrillianceOrBlessed/client/android/app/build/outputs/apk/debug/app-debug.apk
