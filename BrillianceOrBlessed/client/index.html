@@ -1,282 +1,239 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brilliance or Blessed - Premium Board Game</title>
+  <title>Brilliance or Blessed - Realtime Board Game</title>
   <script src="/socket.io/socket.io.js"></script>
+  <!-- SDK Midtrans Snap (Sandbox) -->
+  <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-YOUR_CLIENT_KEY"></script>
+  
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-    body { background: #0f172a; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    /* -------------------------------------------------- */
+    /* THEME SYSTEM (Dark / Light Mode)                   */
+    /* -------------------------------------------------- */
+    :root[data-theme="dark"] {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --border-color: #334155;
+      --text-color: #f8fafc;
+      --card-bg: #334155;
+      --board-tile-1: #0284c7;
+      --board-tile-2: #6366f1;
+    }
+
+    :root[data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --border-color: #cbd5e1;
+      --text-color: #0f172a;
+      --card-bg: #e2e8f0;
+      --board-tile-1: #38bdf8;
+      --board-tile-2: #818cf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background 0.3s, color 0.3s; }
+    body { background: var(--bg-primary); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; }
 
     /* Layout Utama */
-    #sidebar { width: 320px; background: #1e293b; padding: 20px; display: flex; flex-direction: column; gap: 15px; border-right: 2px solid #334155; }
+    #sidebar { width: 340px; background: var(--bg-secondary); padding: 20px; display: flex; flex-direction: column; gap: 15px; border-right: 2px solid var(--border-color); }
     #game-container { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-    /* Canvas Papan Game */
-    #board-canvas { background: #0284c7; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    /* Controls Header */
+    .header-bar { display: flex; justify-content: space-between; align-items: center; }
+    .theme-toggle-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; cursor: pointer; }
 
-    /* Lucky Path Wheel Section */
+    /* Form Login HP */
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group input { padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-color); }
+
+    /* Buttons */
+    .btn { background: #22c55e; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-pay { background: #f59e0b; width: 100%; margin-top: 5px; }
+
+    /* Wheel Overlay Modal */
     #wheel-modal {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(15, 23, 42, 0.95); border: 3px solid #f59e0b; border-radius: 20px;
-      padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px;
-      box-shadow: 0 0 50px rgba(245, 158, 11, 0.4); display: none; z-index: 100;
+      background: var(--bg-secondary); border: 3px solid #f59e0b; border-radius: 20px;
+      padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5); display: none; z-index: 100;
     }
-    .wheel-wrapper { position: relative; width: 260px; height: 260px; }
+    .wheel-wrapper { position: relative; width: 240px; height: 240px; }
     #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 1); }
-    .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 25px solid #ef4444; z-index: 10; }
-
-    /* Status & Controls */
-    .btn { background: #22c55e; color: #fff; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .btn:hover { background: #16a34a; transform: translateY(-2px); }
-    .btn-sabotage { background: #dc2626; margin-top: 5px; font-size: 12px; padding: 6px 12px; }
-
-    /* Taunt Emote Container */
-    .emote-bar { display: flex; gap: 10px; margin-top: 10px; }
-    .emote-btn { font-size: 24px; background: #334155; border: none; padding: 8px; border-radius: 8px; cursor: pointer; }
-    .emote-btn:hover { background: #475569; }
-
-    /* Chat & Dynamic Speech Bubble Overlay */
-    .bubble {
-      position: absolute; background: #fff; color: #000; padding: 8px 14px;
-      border-radius: 15px; font-weight: bold; font-size: 14px;
-      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      pointer-events: none; z-index: 50; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-
-    @keyframes popIn {
-      0% { transform: scale(0); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
+    .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid #ef4444; z-index: 10; }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar Control & Player List -->
+  <!-- Sidebar Container -->
   <div id="sidebar">
-    <h2>Brilliance or Blessed</h2>
-    <div id="lobby-panel">
-      <input type="text" id="p-name" placeholder="Nama Pemain" value="Hero" style="width:100%; padding:8px; margin-bottom:10px;">
-      <button class="btn" onclick="joinRoom()">Join / Create Room</button>
+    <div class="header-bar">
+      <h3>Brilliance or Blessed</h3>
+      <button class="theme-toggle-btn" onclick="toggleTheme()">☀️ / 🌙 Mode</button>
     </div>
 
-    <hr style="border-color:#334155;">
+    <!-- Pendaftaran / Login No HP -->
+    <div id="auth-panel">
+      <h4>Masuk / Daftar (No. HP)</h4>
+      <div class="input-group" style="margin-top: 8px;">
+        <input type="text" id="user-phone" placeholder="Contoh: 08123456789">
+        <input type="text" id="user-name" placeholder="Nama Tampilan">
+        <button class="btn" onclick="loginWithPhone()">Masuk Game</button>
+      </div>
+    </div>
 
-    <h3>Daftar Pemain</h3>
+    <hr style="border-color: var(--border-color);">
+
+    <!-- Top Up Rekening Real / Payment Gateway -->
+    <div>
+      <h4>Beli Gold (Bank / QRIS / E-Wallet)</h4>
+      <p style="font-size: 12px; color: #94a3b8;">Terhubung langsung ke pembayaran bank real-time.</p>
+      <button class="btn btn-pay" onclick="buyGold(10000, 5000)">Beli 5,000 Gold - Rp 10.000</button>
+    </div>
+
+    <hr style="border-color: var(--border-color);">
+
+    <h4>Status Pemain</h4>
     <div id="player-list"></div>
-
-    <div id="turn-indicator" style="margin-top: auto; font-size: 18px; font-weight: bold; color: #f59e0b;">
-      Menunggu Pemain...
-    </div>
-
-    <h4>Emote Taunt</h4>
-    <div class="emote-bar">
-      <button class="emote-btn" onclick="sendTaunt('😂')">😂</button>
-      <button class="emote-btn" onclick="sendTaunt('🔥')">🔥</button>
-      <button class="emote-btn" onclick="sendTaunt('💀')">💀</button>
-      <button class="emote-btn" onclick="sendTaunt('🤡')">🤡</button>
-    </div>
+    <div id="turn-indicator" style="font-weight: bold; color: #f59e0b; margin-top: auto;"></div>
   </div>
 
-  <!-- Game Canvas & Wheel Overlay -->
+  <!-- Game Canvas & Wheel -->
   <div id="game-container">
     <canvas id="board-canvas" width="700" height="500"></canvas>
 
-    <!-- Lucky Path Wheel Modal -->
     <div id="wheel-modal">
-      <h2 style="color: #f59e0b;">Roda Keberuntungan 3D</h2>
+      <h3 style="color: #f59e0b;">Lucky Wheel Spin</h3>
       <div class="wheel-wrapper">
         <div class="pointer"></div>
-        <canvas id="wheel-canvas" width="260" height="260"></canvas>
+        <canvas id="wheel-canvas" width="240" height="240"></canvas>
       </div>
-      <button class="btn" id="btn-spin" onclick="spinWheel()">PUTAR SEKARANG!</button>
+      <button class="btn" id="btn-spin" onclick="spinWheel()">PUTAR RODA!</button>
     </div>
   </div>
 
   <script>
     const socket = io();
-    let myId = null;
+    let currentUser = null;
     let currentGameState = null;
 
-    // Audio SFX Synthesis (Menggunakan Web Audio API tanpa file eksternal)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(freq, type = 'sine', duration = 0.2) {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+    // ----------------------------------------------------
+    // 1. TOGGLE DARK / LIGHT MODE
+    // ----------------------------------------------------
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      renderBoard();
     }
 
-    // 1. Join Room
-    function joinRoom() {
-      const name = document.getElementById('p-name').value;
-      socket.emit('join_room', { roomId: 'room_main', name: name, avatar: 'avatar1' });
+    // ----------------------------------------------------
+    // 2. AUTHENTICATION (NOMOR HP)
+    // ----------------------------------------------------
+    async function loginWithPhone() {
+      const phone = document.getElementById('user-phone').value;
+      const name = document.getElementById('user-name').value;
+
+      if (!phone) return alert('Nomor HP wajib diisi!');
+
+      const res = await fetch('/api/auth/phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, name })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        currentUser = data.user;
+        alert(`Selamat datang, ${currentUser.name}!`);
+        socket.emit('join_room', { roomId: 'room_main', phone: currentUser.phone });
+      } else {
+        alert(data.error);
+      }
     }
 
-    socket.on('connect', () => { myId = socket.id; });
+    // ----------------------------------------------------
+    // 3. PEMBAYARAN REAL-TIME (REKENING BANK / QRIS / SNAP)
+    // ----------------------------------------------------
+    async function buyGold(amountRupiah, goldAmount) {
+      if (!currentUser) return alert('Silakan login dengan Nomor HP terlebih dahulu!');
 
-    // 2. Realtime State Sync
+      const res = await fetch('/api/payment/charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: currentUser.phone, amount: amountRupiah, goldAmount })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        // Membuka Popup Pembayaran Real (BCA, Mandiri, BRI, QRIS, GoPay, dll)
+        snap.pay(data.token, {
+          onSuccess: function(result) { alert('Pembayaran Sukses! Gold ditambahkan.'); location.reload(); },
+          onPending: function(result) { alert('Menunggu pembayaran Anda.'); },
+          onError: function(result) { alert('Pembayaran gagal!'); }
+        });
+      }
+    }
+
+    // ----------------------------------------------------
+    // 4. SOCKET & GAMEPLAY REALTIME
+    // ----------------------------------------------------
     socket.on('room_state_update', (state) => {
       currentGameState = state;
       updateUI();
       renderBoard();
     });
 
-    socket.on('timer_tick', ({ timeRemaining, currentTurn }) => {
-      if (!currentGameState) return;
-      currentGameState.timeRemaining = timeRemaining;
-      currentGameState.currentTurn = currentTurn;
-      document.getElementById('turn-indicator').innerText = 
-        `Giliran: ${getTurnName(currentTurn)} (${timeRemaining}s)`;
-    });
-
-    function getTurnName(id) {
-      const p = currentGameState?.players.find(x => x.id === id);
-      return p ? p.name : 'Unknown';
-    }
-
-    // Update UI Sidebar
     function updateUI() {
       const list = document.getElementById('player-list');
       list.innerHTML = '';
+      if (!currentGameState) return;
 
       currentGameState.players.forEach(p => {
         const div = document.createElement('div');
-        div.style.cssText = "background:#334155; padding:10px; margin-bottom:8px; border-radius:6px;";
-        div.innerHTML = `
-          <strong>${p.name}${p.id === myId ? '(Kamu)' : ''}</strong><br>
-          Posisi: Petak ${p.position} \vert{} Gold: 💰${p.gold}<br>
-          Item: ${p.inventory.join(', ') \vert{}\vert{} 'Kosong'}${p.id !== myId && currentGameState.currentTurn === myId ? 
-            `<br><button class="btn btn-sabotage" onclick="useSabotage('${p.id}', 'SWAP')">Tukar Posisi</button>
-             <button class="btn btn-sabotage" onclick="useSabotage('${p.id}', 'FREEZE')">Bekukan</button>` : ''}
-        `;
+        div.style.cssText = "padding:8px; margin-bottom:6px; border-radius:6px; background:var(--card-bg);";
+        div.innerHTML = `<strong>${p.name}</strong> | Petak ${p.position} | 💰 ${p.gold}`;
         list.appendChild(div);
       });
 
-      // Kontrol Modal Wheel Spin
-      const wheelModal = document.getElementById('wheel-modal');
-      if (currentGameState.gameState === 'PLAYING' && currentGameState.currentTurn === myId) {
-        wheelModal.style.display = 'flex';
+      const modal = document.getElementById('wheel-modal');
+      if (currentGameState.gameState === 'PLAYING' && currentGameState.currentTurn === socket.id) {
+        modal.style.display = 'flex';
       } else {
-        wheelModal.style.display = 'none';
+        modal.style.display = 'none';
       }
     }
 
-    // 3. Render Papan Game Realtime Canvas
     function renderBoard() {
       const canvas = document.getElementById('board-canvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Render Petak Jalur
-      const totalTiles = 30;
-      for (let i = 0; i < totalTiles; i++) {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const tileColor1 = computedStyle.getPropertyValue('--board-tile-1').trim();
+      const tileColor2 = computedStyle.getPropertyValue('--board-tile-2').trim();
+
+      // Render Papan
+      for (let i = 0; i < 30; i++) {
         const x = (i % 10) * 65 + 25;
         const y = Math.floor(i / 10) * 140 + 50;
-        
-        ctx.fillStyle = i % 2 === 0 ? '#38bdf8' : '#818cf8';
+        ctx.fillStyle = i % 2 === 0 ? tileColor1 : tileColor2;
         ctx.fillRect(x, y, 55, 50);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(i + 1, x + 20, y + 30);
-      }
-
-      // Render Pion Pemain
-      if (currentGameState?.players) {
-        currentGameState.players.forEach((p, idx) => {
-          const x = (p.position % 10) * 65 + 35 + (idx * 5);
-          const y = Math.floor(p.position / 10) * 140 + 60;
-          
-          ctx.beginPath();
-          ctx.arc(x, y, 12, 0, Math.PI * 2);
-          ctx.fillStyle = ['#ef4444', '#eab308', '#22c55e', '#a855f7'][idx % 4];
-          ctx.fill();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = '#fff';
-          ctx.stroke();
-        });
       }
     }
 
-    // 4. Spin Lucky Wheel Action
     function spinWheel() {
-      document.getElementById('btn-spin').disabled = true;
       socket.emit('req_spin_wheel');
     }
 
     socket.on('wheel_spun', (data) => {
-      playSound(600, 'square', 0.4);
       const wheelCanvas = document.getElementById('wheel-canvas');
-      const rotationDegrees = 1440 + (data.slotIndex * 60); // 4 Putaran + Sudut Target
-      wheelCanvas.style.transform = `rotate(${rotationDegrees}deg)`;
-
+      wheelCanvas.style.transform = `rotate(${1440 + (data.slotIndex * 60)}deg)`;
       setTimeout(() => {
-        playSound(800, 'sine', 0.6);
-        alert(`Dapat: ${data.slotResult.label}! Maju ${data.steps} langkah.`);
-        document.getElementById('btn-spin').disabled = false;
-        wheelCanvas.style.transform = `rotate(0deg)`;
+        alert(`Dapat ${data.slotResult.label}!`);
+        wheelCanvas.style.transform = 'rotate(0deg)';
       }, 4000);
     });
-
-    // 5. Sabotase & Taunt Realtime
-    function useSabotage(targetId, itemId) {
-      socket.emit('use_sabotage', { targetId, itemId });
-    }
-
-    socket.on('sabotage_executed', (data) => {
-      playSound(150, 'sawtooth', 0.5); // Efek suara jahat/sabotase
-      alert(`[SABOTASE] ${data.effectSummary}`);
-    });
-
-    function sendTaunt(emote) {
-      socket.emit('send_taunt', { emoteId: emote });
-    }
-
-    socket.on('taunt_received', (data) => {
-      playSound(1000, 'sine', 0.15);
-      showTauntBubble(data.senderName, data.emoteId);
-    });
-
-    function showTauntBubble(name, emote) {
-      const container = document.getElementById('game-container');
-      const bubble = document.createElement('div');
-      bubble.className = 'bubble';
-      bubble.innerText = `${name}:${emote}`;
-      bubble.style.left = `${Math.random() * 60 + 20}%`;
-      bubble.style.top = `${Math.random() * 60 + 20}%`;
-      container.appendChild(bubble);
-
-      setTimeout(() => bubble.remove(), 2500);
-    }
-
-    // Render Lucky Wheel Visual Canvas
-    (function drawWheelCanvas() {
-      const canvas = document.getElementById('wheel-canvas');
-      const ctx = canvas.getContext('2d');
-      const colors = ['#f39c12', '#e74c3c', '#9b59b6', '#f1c40f', '#7f8c8d', '#3498db'];
-      const labels = ['2x', 'JACKPOT', 'SWAP', '+100', 'ZONK', 'FREEZE'];
-
-      for (let i = 0; i < 6; i++) {
-        ctx.beginPath();
-        ctx.moveTo(130, 130);
-        ctx.arc(130, 130, 130, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
-        ctx.fillStyle = colors[i];
-        ctx.fill();
-        ctx.save();
-        ctx.translate(130, 130);
-        ctx.rotate((i * Math.PI) / 3 + Math.PI / 6);
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(labels[i], 50, 5);
-        ctx.restore();
-      }
-    })();
   </script>
 </body>
 </html>
