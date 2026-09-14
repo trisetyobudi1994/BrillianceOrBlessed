@@ -19,15 +19,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
-      # 3. Setup Java JDK 17 & Aktifkan Cache Resmi Gradle
+      # 3. Setup Java JDK 17 (v5 tanpa cache otomatis agar tidak crash)
       - name: Setup Java JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
 
       # 4. Prepare Client, Package.json, & Capacitor
       - name: Install Dependencies & Prepare Capacitor
@@ -46,7 +45,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      # 5. Fix Jetifier & Upgrade Gradle ke Versi 8.7
+      # 5. Fix Jetifier & Upgrade Gradle Wrapper ke 8.7
       - name: Fix gradle.properties & Upgrade Gradle Wrapper
         run: |
           cd BrillianceOrBlessed/client/android
@@ -56,17 +55,17 @@ jobs:
             sed -i 's/android.jetifier.blacklist/android.jetifier.ignorelist/g' gradle.properties
           fi
           
-          # Paksa naik versi ke Gradle 8.7 untuk menghindari error Jar bcprov
+          # Upgrade ke Gradle 8.7 untuk menghindari bug BouncyCastle/bcprov
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             sed -i 's/gradle-8.2.1-all.zip/gradle-8.7-all.zip/g' gradle/wrapper/gradle-wrapper.properties
           fi
 
-      # 6. Build APK Debug dengan Force Refresh
+      # 6. Build APK Debug
       - name: Build APK with Gradle
         run: |
           cd BrillianceOrBlessed/client/android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --refresh-dependencies
+          ./gradlew assembleDebug --no-daemon
 
       # 7. Upload hasil APK
       - name: Upload APK Artifact
