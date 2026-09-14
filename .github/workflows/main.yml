@@ -21,8 +21,7 @@ jobs:
         with:
           node-version: 20
 
-      # 3. Setup Java JDK 21 (Wajib untuk Capacitor 7)
-      #    JDK 21 kompatibel dengan bcprov-jdk18on-1.79
+      # 3. Setup Java JDK 21
       - name: Setup Java JDK 21
         uses: actions/setup-java@v4
         with:
@@ -34,37 +33,33 @@ jobs:
         run: |
           cd BrillianceOrBlessed/client
 
-          # Buat package.json jika belum ada
           if [ ! -f package.json ]; then
             echo '{"name": "brilliance-client", "version": "1.0.0"}' > package.json
           fi
 
-          # Buat folder www dan copy index.html
           mkdir -p www
           find . -maxdepth 3 -iname "index.html" -not -path "./www/*" -exec cp {} www/index.html \;
 
-          # Install Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
 
-          # Inisialisasi & Sync Capacitor
           npx cap init "BrillianceOrBlessed" "com.brilliance.app" --web-dir www
           npx cap add android
           npx cap sync android
 
-      # 5. Konfigurasi Gradle (Blacklist Jetifier + Upgrade Gradle)
+      # 5. Konfigurasi Gradle (Blacklist Jetifier + Upgrade Gradle ke 8.11.1)
       - name: Configure Gradle Properties
         run: |
           cd BrillianceOrBlessed/client/android
 
-          # 5a. Tambahkan blacklist Jetifier untuk Bouncy Castle
+          # 5a. Blacklist Jetifier untuk Bouncy Castle
           echo "" >> gradle.properties
           echo "# Fix untuk bcprov-jdk18on error" >> gradle.properties
           echo "android.jetifier.blacklist=bcprov-jdk18on" >> gradle.properties
           echo "android.jetifier.ignorelist=bcprov-jdk18on" >> gradle.properties
 
-          # 5b. Upgrade Gradle ke 8.5 agar mendukung JDK 21
-          sed -i 's|gradle-.*-all.zip|gradle-8.5-all.zip|' gradle/wrapper/gradle-wrapper.properties
-          sed -i 's|gradle-.*-bin.zip|gradle-8.5-bin.zip|' gradle/wrapper/gradle-wrapper.properties
+          # 5b. Upgrade Gradle ke 8.11.1
+          sed -i 's|gradle-.*-all.zip|gradle-8.11.1-all.zip|' gradle/wrapper/gradle-wrapper.properties
+          sed -i 's|gradle-.*-bin.zip|gradle-8.11.1-bin.zip|' gradle/wrapper/gradle-wrapper.properties
 
           echo "=== gradle.properties ==="
           cat gradle.properties
