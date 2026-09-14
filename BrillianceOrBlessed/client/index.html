@@ -3,196 +3,359 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brilliance or Blessed - Realtime Board Game</title>
+  <title>Brilliance or Blessed - MLBB Level Arena</title>
   <script src="/socket.io/socket.io.js"></script>
-  <!-- SDK Midtrans Snap (Sandbox) -->
   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-YOUR_CLIENT_KEY"></script>
   
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+
   <style>
     /* -------------------------------------------------- */
-    /* THEME SYSTEM (Dark / Light Mode)                   */
+    /* THEME SYSTEM & AAA GAMING STYLES (MLBB STYLE)      */
     /* -------------------------------------------------- */
     :root[data-theme="dark"] {
-      --bg-primary: #0f172a;
-      --bg-secondary: #1e293b;
-      --border-color: #334155;
+      --bg-main: #060913;
+      --bg-panel: rgba(15, 23, 42, 0.85);
+      --border-glow: #00f0ff;
+      --accent-gold: #ffb703;
+      --accent-danger: #ff0055;
       --text-color: #f8fafc;
-      --card-bg: #334155;
-      --board-tile-1: #0284c7;
-      --board-tile-2: #6366f1;
+      --card-gradient: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95));
     }
 
     :root[data-theme="light"] {
-      --bg-primary: #f1f5f9;
-      --bg-secondary: #ffffff;
-      --border-color: #cbd5e1;
+      --bg-main: #e2e8f0;
+      --bg-panel: rgba(255, 255, 255, 0.9);
+      --border-glow: #0284c7;
+      --accent-gold: #d97706;
+      --accent-danger: #dc2626;
       --text-color: #0f172a;
-      --card-bg: #e2e8f0;
-      --board-tile-1: #38bdf8;
-      --board-tile-2: #818cf8;
+      --card-gradient: linear-gradient(135deg, #ffffff, #f1f5f9);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background 0.3s, color 0.3s; }
-    body { background: var(--bg-primary); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; user-select: none; }
+    body { background: var(--bg-main); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 80%); }
 
-    /* Layout Utama */
-    #sidebar { width: 340px; background: var(--bg-secondary); padding: 20px; display: flex; flex-direction: column; gap: 15px; border-right: 2px solid var(--border-color); }
-    #game-container { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    /* LAYOUT UTAMA BARU */
+    #sidebar {
+      width: 360px; background: var(--bg-panel); backdrop-filter: blur(12px);
+      padding: 24px; display: flex; flex-direction: column; gap: 18px;
+      border-right: 2px solid rgba(0, 240, 255, 0.3); box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
 
-    /* Controls Header */
-    .header-bar { display: flex; justify-content: space-between; align-items: center; }
-    .theme-toggle-btn { background: var(--card-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; cursor: pointer; }
+    #game-container {
+      flex: 1; position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; overflow: hidden;
+    }
 
-    /* Form Login HP */
-    .input-group { display: flex; flex-direction: column; gap: 6px; }
-    .input-group input { padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-color); }
+    /* TYPOGRAPHY ESPORTS MODE */
+    h2, h3, h4 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; }
+    .neon-text { text-shadow: 0 0 10px var(--border-glow), 0 0 20px var(--border-glow); }
+    .gold-text { color: var(--accent-gold); text-shadow: 0 0 10px rgba(255, 183, 3, 0.5); }
 
-    /* Buttons */
-    .btn { background: #22c55e; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    .btn-pay { background: #f59e0b; width: 100%; margin-top: 5px; }
+    /* BOARD CANVAS GLOW EFFECTS */
+    #board-canvas {
+      border-radius: 20px;
+      box-shadow: 0 0 50px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(0,0,0,0.8);
+      border: 2px solid rgba(0, 240, 255, 0.4);
+    }
 
-    /* Wheel Overlay Modal */
+    /* BUTTONS ESPORTS STYLE */
+    .btn-ml {
+      background: linear-gradient(90deg, #00f0ff, #0072ff);
+      color: #fff; border: none; padding: 12px 20px; font-weight: 700;
+      font-family: 'Orbitron', sans-serif; font-size: 13px; text-transform: uppercase;
+      border-radius: 8px; cursor: pointer; transition: 0.2s all;
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4); clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+    }
+    .btn-ml:hover { transform: scale(1.05) translateY(-2px); filter: brightness(1.2); }
+    .btn-pay { background: linear-gradient(90deg, #ffb703, #ff8800); box-shadow: 0 4px 15px rgba(255, 183, 3, 0.4); }
+    .btn-sabotage { background: linear-gradient(90deg, #ff0055, #990033); box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); font-size: 11px; padding: 6px 10px; clip-path: none; border-radius: 4px; }
+
+    /* MODAL KUIS OVERLAY CLASS MLBB */
+    .modal-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(4, 7, 18, 0.9); display: none; align-items: center; justify-content: center;
+      z-index: 200; backdrop-filter: blur(10px);
+    }
+    .quiz-card {
+      background: var(--card-gradient); border: 2px solid var(--border-glow); border-radius: 20px;
+      padding: 30px; width: 440px; text-align: center; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4);
+      animation: popEsports 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .quiz-img { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin: 15px 0; border: 2px solid var(--border-glow); box-shadow: 0 0 15px rgba(0,240,255,0.3); }
+    .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+
+    /* LUCKY WHEEL MODAL ESPORTS */
     #wheel-modal {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: var(--bg-secondary); border: 3px solid #f59e0b; border-radius: 20px;
-      padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5); display: none; z-index: 100;
+      background: var(--bg-panel); border: 3px solid var(--accent-gold); border-radius: 30px;
+      padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+      box-shadow: 0 0 80px rgba(255, 183, 3, 0.5); display: none; z-index: 100; backdrop-filter: blur(15px);
     }
-    .wheel-wrapper { position: relative; width: 240px; height: 240px; }
-    #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 1); }
-    .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 22px solid #ef4444; z-index: 10; }
+    .wheel-wrapper { position: relative; width: 280px; height: 280px; }
+    #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 1); filter: drop-shadow(0 0 15px rgba(255,183,3,0.6)); }
+    .pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 28px solid var(--accent-danger); z-index: 10; filter: drop-shadow(0 0 8px #ff0055); }
+
+    /* EFEK SABOTASE OVERLAY (FREEZE ES MLBB) */
+    #freeze-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.2) 0%, rgba(2, 132, 199, 0.6) 100%);
+      backdrop-filter: blur(6px) contrast(150%); display: none; pointer-events: none;
+      border: 8px solid #00f0ff; box-shadow: inset 0 0 80px #00f0ff; z-index: 180;
+      align-items: center; justify-content: center; flex-direction: column;
+    }
+
+    /* EMOTE & TAUNT BUBBLE FLASHING */
+    .emote-bubble {
+      position: absolute; background: linear-gradient(135deg, #ff0055, #ffb703);
+      color: #fff; padding: 10px 18px; border-radius: 30px; font-weight: 900;
+      font-family: 'Orbitron', sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(255,0,85,0.8);
+      animation: emotePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 160; pointer-events: none;
+    }
+
+    @keyframes popEsports { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes emotePop { 0% { transform: scale(0) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
 
-  <!-- Sidebar Container -->
+  <!-- SIDEBAR ESPORTS -->
   <div id="sidebar">
-    <div class="header-bar">
-      <h3>Brilliance or Blessed</h3>
-      <button class="theme-toggle-btn" onclick="toggleTheme()">☀️ / 🌙 Mode</button>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 class="neon-text" style="font-size: 18px;">Brilliance</h2>
+      <button class="btn-ml" style="padding:6px 10px; font-size:10px;" onclick="toggleTheme()">DARK/LIGHT</button>
     </div>
 
-    <!-- Pendaftaran / Login No HP -->
-    <div id="auth-panel">
-      <h4>Masuk / Daftar (No. HP)</h4>
-      <div class="input-group" style="margin-top: 8px;">
-        <input type="text" id="user-phone" placeholder="Contoh: 08123456789">
-        <input type="text" id="user-name" placeholder="Nama Tampilan">
-        <button class="btn" onclick="loginWithPhone()">Masuk Game</button>
-      </div>
+    <!-- AUTH FORM -->
+    <div id="auth-panel" style="background: var(--card-gradient); padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.2);">
+      <h4 style="font-size: 12px; margin-bottom: 8px;" class="gold-text">LOGIN ARENA (NO. HP)</h4>
+      <input type="text" id="user-phone" placeholder="08123456789" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-glow); background:var(--bg-main); color:var(--text-color); margin-bottom:10px;">
+      <button class="btn-ml" style="width: 100%;" onclick="loginWithPhone()">MASUK COMBAT</button>
     </div>
 
-    <hr style="border-color: var(--border-color);">
-
-    <!-- Top Up Rekening Real / Payment Gateway -->
-    <div>
-      <h4>Beli Gold (Bank / QRIS / E-Wallet)</h4>
-      <p style="font-size: 12px; color: #94a3b8;">Terhubung langsung ke pembayaran bank real-time.</p>
-      <button class="btn btn-pay" onclick="buyGold(10000, 5000)">Beli 5,000 Gold - Rp 10.000</button>
+    <!-- TOPUP VA / QRIS REALTIME -->
+    <div style="background: var(--card-gradient); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 183, 3, 0.3);">
+      <h4 style="font-size: 12px; margin-bottom: 4px;" class="gold-text">VA BANK & QRIS REALTIME</h4>
+      <p style="font-size: 11px; opacity: 0.8; margin-bottom: 10px;">Top up instant masuk ke akun bank kamu.</p>
+      <button class="btn-ml btn-pay" style="width: 100%;" onclick="buyGold(10000, 5000)">DIAMOND PACK - RP 10.000</button>
     </div>
 
-    <hr style="border-color: var(--border-color);">
+    <!-- PLAYER LIST -->
+    <h4 style="font-size: 14px; margin-top: 5px;">PLAYER ROSTER</h4>
+    <div id="player-list" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 180px;"></div>
 
-    <h4>Status Pemain</h4>
-    <div id="player-list"></div>
-    <div id="turn-indicator" style="font-weight: bold; color: #f59e0b; margin-top: auto;"></div>
+    <!-- EMOTE TAUNTS -->
+    <h4 style="font-size: 12px; margin-top: 5px;" class="gold-text">TAUNT EMOTES</h4>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('🔥 SLAY!')">🔥</button>
+      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('🤡 NOOB!')">🤡</button>
+      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('💀 SAVAGE!')">💀</button>
+      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('👑 KING!')">👑</button>
+    </div>
+
+    <div id="turn-indicator" class="neon-text" style="font-weight:bold; font-size:14px; margin-top:auto;">WAITING FOR ARENA...</div>
   </div>
 
-  <!-- Game Canvas & Wheel -->
+  <!-- GAME CONTAINER & CANVAS -->
   <div id="game-container">
-    <canvas id="board-canvas" width="700" height="500"></canvas>
+    <canvas id="board-canvas" width="800" height="540"></canvas>
 
+    <!-- OVERLAY LAYAR BEKU (SABOTASE FREEZE) -->
+    <div id="freeze-overlay">
+      <h1 class="neon-text" style="font-size: 48px; color: #00f0ff;">YOU ARE FROZEN!</h1>
+      <p style="font-size: 18px; margin-top: 10px;">Giliranmu dilewati oleh Sabotase Lawan!</p>
+    </div>
+
+    <!-- MODAL KUIS OVERLAY (MLBB BANNER) -->
+    <div class="modal-overlay" id="quiz-modal">
+      <div class="quiz-card">
+        <h3 class="gold-text" style="font-size: 20px;">TRIVIA CHALLENGE!</h3>
+        <p style="font-size:13px; margin-top:5px;" id="quiz-question">Jawab cepat untuk bonus Gold Savage!</p>
+        <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400" id="quiz-img" class="quiz-img" alt="Quiz Gambar">
+        <div class="quiz-options">
+          <button class="btn-ml" onclick="answerQuiz(0)">OPTION A</button>
+          <button class="btn-ml" onclick="answerQuiz(1)">OPTION B</button>
+          <button class="btn-ml" onclick="answerQuiz(2)">OPTION C</button>
+          <button class="btn-ml" onclick="answerQuiz(3)">OPTION D</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LUCKY WHEEL MODAL -->
     <div id="wheel-modal">
-      <h3 style="color: #f59e0b;">Lucky Wheel Spin</h3>
+      <h3 class="gold-text" style="font-size: 22px;">LUCKY SPIN WHEEL</h3>
       <div class="wheel-wrapper">
         <div class="pointer"></div>
-        <canvas id="wheel-canvas" width="240" height="240"></canvas>
+        <canvas id="wheel-canvas" width="280" height="280"></canvas>
       </div>
-      <button class="btn" id="btn-spin" onclick="spinWheel()">PUTAR RODA!</button>
+      <button class="btn-ml btn-pay" id="btn-spin" onclick="spinWheel()" style="font-size: 16px; padding: 14px 30px;">SPIN SEKARANG!</button>
     </div>
   </div>
 
   <script>
     const socket = io();
-    let currentUser = null;
     let currentGameState = null;
+    let currentUser = null;
 
-    // ----------------------------------------------------
-    // 1. TOGGLE DARK / LIGHT MODE
-    // ----------------------------------------------------
+    // AUDIO SYNTHESIZER ESPORTS SFX
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSFX(freq, type = 'sine', duration = 0.2) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
     function toggleTheme() {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
+      const current = document.documentElement.getAttribute('data-theme');
+      document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
       renderBoard();
     }
 
-    // ----------------------------------------------------
-    // 2. AUTHENTICATION (NOMOR HP)
-    // ----------------------------------------------------
     async function loginWithPhone() {
       const phone = document.getElementById('user-phone').value;
-      const name = document.getElementById('user-name').value;
-
-      if (!phone) return alert('Nomor HP wajib diisi!');
-
-      const res = await fetch('/api/auth/phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, name })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        currentUser = data.user;
-        alert(`Selamat datang, ${currentUser.name}!`);
-        socket.emit('join_room', { roomId: 'room_main', phone: currentUser.phone });
-      } else {
-        alert(data.error);
-      }
+      if (!phone) return alert('Masukkan Nomor HP!');
+      currentUser = { phone, name: `Hero_${phone.slice(-4)}` };
+      socket.emit('join_room', { roomId: 'room_main', phone: phone });
     }
 
-    // ----------------------------------------------------
-    // 3. PEMBAYARAN REAL-TIME (REKENING BANK / QRIS / SNAP)
-    // ----------------------------------------------------
-    async function buyGold(amountRupiah, goldAmount) {
-      if (!currentUser) return alert('Silakan login dengan Nomor HP terlebih dahulu!');
-
+    async function buyGold(amount, gold) {
+      if (!currentUser) return alert('Login dulu!');
       const res = await fetch('/api/payment/charge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: currentUser.phone, amount: amountRupiah, goldAmount })
+        body: JSON.stringify({ phone: currentUser.phone, amount, goldAmount: gold })
       });
-
       const data = await res.json();
       if (data.success) {
-        // Membuka Popup Pembayaran Real (BCA, Mandiri, BRI, QRIS, GoPay, dll)
         snap.pay(data.token, {
-          onSuccess: function(result) { alert('Pembayaran Sukses! Gold ditambahkan.'); location.reload(); },
-          onPending: function(result) { alert('Menunggu pembayaran Anda.'); },
-          onError: function(result) { alert('Pembayaran gagal!'); }
+          onSuccess: function() { playSFX(1200, 'triangle', 0.5); alert('Topup Sukses!'); }
         });
       }
     }
 
-    // ----------------------------------------------------
-    // 4. SOCKET & GAMEPLAY REALTIME
-    // ----------------------------------------------------
+    // RENDER BOARD CANVAS BERGAYA ESPORTS CYBER
+    function renderBoard() {
+      const canvas = document.getElementById('board-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Gradient Background Canvas
+      const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      bgGrad.addColorStop(0, '#0a0e1a');
+      bgGrad.addColorStop(1, '#020617');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Render 30 Petak Board Modern
+      for (let i = 0; i < 30; i++) {
+        const x = (i % 10) * 74 + 30;
+        const y = Math.floor(i / 10) * 155 + 45;
+
+        ctx.shadowBlur = 10;
+        if (i % 5 === 0) {
+          ctx.fillStyle = '#ffb703'; ctx.shadowColor = '#ffb703'; // Petak Kuis
+        } else if (i % 7 === 0) {
+          ctx.fillStyle = '#ff0055'; ctx.shadowColor = '#ff0055'; // Petak Trap
+        } else {
+          ctx.fillStyle = i % 2 === 0 ? '#00f0ff' : '#7000ff';
+          ctx.shadowColor = i % 2 === 0 ? '#00f0ff' : '#7000ff';
+        }
+
+        ctx.beginPath();
+        ctx.roundRect(x, y, 64, 58, 12);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 13px Orbitron';
+        if (i % 5 === 0) ctx.fillText('❓ KUIS', x + 8, y + 34);
+        else ctx.fillText(`${i + 1}`, x + 24, y + 34);
+      }
+
+      // Render Avatar/Pion Player
+      if (currentGameState?.players) {
+        currentGameState.players.forEach((p, idx) => {
+          const x = (p.position % 10) * 74 + 52 + (idx * 3);
+          const y = Math.floor(p.position / 10) * 155 + 72;
+
+          ctx.beginPath();
+          ctx.arc(x, y, 15, 0, Math.PI * 2);
+          ctx.fillStyle = ['#ff0055', '#ffb703', '#00f0ff', '#a855f7'][idx % 4];
+          ctx.fill();
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+        });
+      }
+    }
+
+    // TAUNT BUBBLE SYNC
+    function sendTaunt(emote) {
+      socket.emit('send_taunt', { emoteId: emote });
+    }
+
+    socket.on('taunt_received', (data) => {
+      playSFX(900, 'square', 0.2);
+      const container = document.getElementById('game-container');
+      const bubble = document.createElement('div');
+      bubble.className = 'emote-bubble';
+      bubble.innerText = `${data.senderName}: ${data.emoteId}`;
+      bubble.style.left = `${Math.random() * 50 + 25}%`;
+      bubble.style.top = `${Math.random() * 50 + 20}%`;
+      container.appendChild(bubble);
+
+      setTimeout(() => bubble.remove(), 2500);
+    });
+
+    // WHEEL SPIN ACTION
+    function spinWheel() {
+      socket.emit('req_spin_wheel');
+    }
+
+    socket.on('wheel_spun', (data) => {
+      playSFX(600, 'sawtooth', 0.4);
+      const wheelCanvas = document.getElementById('wheel-canvas');
+      wheelCanvas.style.transform = `rotate(${1440 + (data.slotIndex * 60)}deg)`;
+
+      setTimeout(() => {
+        playSFX(1000, 'triangle', 0.5);
+        if (data.newPosition % 5 === 0) {
+          document.getElementById('quiz-modal').style.display = 'flex';
+        }
+        wheelCanvas.style.transform = 'rotate(0deg)';
+      }, 4000);
+    });
+
+    function answerQuiz(opt) {
+      playSFX(1400, 'sine', 0.3);
+      alert('TRIVIA CLEARED! +500 Gold');
+      document.getElementById('quiz-modal').style.display = 'none';
+    }
+
     socket.on('room_state_update', (state) => {
       currentGameState = state;
-      updateUI();
       renderBoard();
+      updateUI();
     });
 
     function updateUI() {
+      if (!currentGameState) return;
       const list = document.getElementById('player-list');
       list.innerHTML = '';
-      if (!currentGameState) return;
 
       currentGameState.players.forEach(p => {
         const div = document.createElement('div');
-        div.style.cssText = "padding:8px; margin-bottom:6px; border-radius:6px; background:var(--card-bg);";
-        div.innerHTML = `<strong>${p.name}</strong> | Petak ${p.position} | 💰 ${p.gold}`;
+        div.style.cssText = "background: var(--card-gradient); padding:8px 12px; border-radius:8px; border:1px solid rgba(0,240,255,0.2); font-size:12px;";
+        div.innerHTML = `<strong>${p.name}</strong> | Petak ${p.position} | 💎 ${p.gold}`;
         list.appendChild(div);
       });
 
@@ -204,36 +367,28 @@
       }
     }
 
-    function renderBoard() {
-      const canvas = document.getElementById('board-canvas');
+    // DRAW WHEEL CANVAS 3D CYBER
+    (function drawWheel() {
+      const canvas = document.getElementById('wheel-canvas');
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const colors = ['#ffb703', '#ff0055', '#7000ff', '#00f0ff', '#475569', '#0072ff'];
+      const labels = ['2x MULTI', 'JACKPOT', 'SWAP', '+100 GOLD', 'ZONK', 'FREEZE'];
 
-      const computedStyle = getComputedStyle(document.documentElement);
-      const tileColor1 = computedStyle.getPropertyValue('--board-tile-1').trim();
-      const tileColor2 = computedStyle.getPropertyValue('--board-tile-2').trim();
-
-      // Render Papan
-      for (let i = 0; i < 30; i++) {
-        const x = (i % 10) * 65 + 25;
-        const y = Math.floor(i / 10) * 140 + 50;
-        ctx.fillStyle = i % 2 === 0 ? tileColor1 : tileColor2;
-        ctx.fillRect(x, y, 55, 50);
+      for (let i = 0; i < 6; i++) {
+        ctx.beginPath();
+        ctx.moveTo(140, 140);
+        ctx.arc(140, 140, 140, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
+        ctx.fillStyle = colors[i];
+        ctx.fill();
+        ctx.save();
+        ctx.translate(140, 140);
+        ctx.rotate((i * Math.PI) / 3 + Math.PI / 6);
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 12px Orbitron';
+        ctx.fillText(labels[i], 50, 5);
+        ctx.restore();
       }
-    }
-
-    function spinWheel() {
-      socket.emit('req_spin_wheel');
-    }
-
-    socket.on('wheel_spun', (data) => {
-      const wheelCanvas = document.getElementById('wheel-canvas');
-      wheelCanvas.style.transform = `rotate(${1440 + (data.slotIndex * 60)}deg)`;
-      setTimeout(() => {
-        alert(`Dapat ${data.slotResult.label}!`);
-        wheelCanvas.style.transform = 'rotate(0deg)';
-      }, 4000);
-    });
+    })();
   </script>
 </body>
 </html>
