@@ -290,9 +290,13 @@
     }
 
     // ==========================================
-    // GAME CLIENT LOGIC & SOCKETS
+    // GAME CLIENT LOGIC & SOCKETS (DYNAMIC PRODUCTION ROUTING)
     // ==========================================
-    const socket = io();
+    const SOCKET_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://brillianceorblessed-production.up.railway.app';
+
+    const socket = io(SOCKET_URL);
     let currentGameState = null;
     let currentUser = null;
 
