@@ -36,7 +36,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; user-select: none; }
     body { background: var(--bg-main); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 80%); }
 
-    /* LAYOUT UTAMA BARU */
+    /* LAYOUT UTAMA */
     #sidebar {
       width: 360px; background: var(--bg-panel); backdrop-filter: blur(12px);
       padding: 24px; display: flex; flex-direction: column; gap: 18px;
@@ -71,7 +71,7 @@
     }
     .btn-ml:hover { transform: scale(1.05) translateY(-2px); filter: brightness(1.2); }
     .btn-pay { background: linear-gradient(90deg, #ffb703, #ff8800); box-shadow: 0 4px 15px rgba(255, 183, 3, 0.4); }
-    .btn-sabotage { background: linear-gradient(90deg, #ff0055, #990033); box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); font-size: 11px; padding: 6px 10px; clip-path: none; border-radius: 4px; }
+    .btn-sabotage { background: linear-gradient(90deg, #ff0055, #990033); box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); font-size: 10px; padding: 4px 8px; clip-path: none; border-radius: 4px; margin-left: 4px; }
 
     /* MODAL KUIS OVERLAY CLASS MLBB */
     .modal-overlay {
@@ -174,11 +174,11 @@
         <h3 class="gold-text" style="font-size: 20px;">TRIVIA CHALLENGE!</h3>
         <p style="font-size:13px; margin-top:5px;" id="quiz-question">Jawab cepat untuk bonus Gold Savage!</p>
         <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400" id="quiz-img" class="quiz-img" alt="Quiz Gambar">
-        <div class="quiz-options">
-          <button class="btn-ml" onclick="answerQuiz(0)">OPTION A</button>
-          <button class="btn-ml" onclick="answerQuiz(1)">OPTION B</button>
-          <button class="btn-ml" onclick="answerQuiz(2)">OPTION C</button>
-          <button class="btn-ml" onclick="answerQuiz(3)">OPTION D</button>
+        <div class="quiz-options" id="quiz-options-container">
+          <button class="btn-ml" onclick="answerQuiz(0)" id="opt-0">OPTION A</button>
+          <button class="btn-ml" onclick="answerQuiz(1)" id="opt-1">OPTION B</button>
+          <button class="btn-ml" onclick="answerQuiz(2)" id="opt-2">OPTION C</button>
+          <button class="btn-ml" onclick="answerQuiz(3)" id="opt-3">OPTION D</button>
         </div>
       </div>
     </div>
@@ -195,13 +195,114 @@
   </div>
 
   <script>
+    // ==========================================
+    // 2D CANVAS PARTICLE & VFX ENGINE (ESPORTS)
+    // ==========================================
+    class VFXEngine {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.particles = [];
+        this.isCelebrating = false;
+        this.bannerScale = 0;
+      }
+
+      spawnVictoryBurst() {
+        this.isCelebrating = true;
+        this.bannerScale = 0;
+        const colors = ['#00f0ff', '#ffb703', '#ff0055', '#7000ff', '#ffffff'];
+
+        for (let i = 0; i < 150; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 12 + 4;
+          this.particles.push({
+            x: this.canvas.width / 2,
+            y: this.canvas.height / 2,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 3,
+            size: Math.random() * 8 + 4,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            vRot: (Math.random() - 0.5) * 10,
+            gravity: 0.15,
+            opacity: 1,
+            shape: Math.random() > 0.5 ? 'rect' : 'circle'
+          });
+        }
+      }
+
+      updateAndRender() {
+        if (this.particles.length === 0 && !this.isCelebrating) return;
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.opacity -= 0.008;
+          p.rotation += p.vRot;
+
+          if (p.opacity <= 0) {
+            this.particles.splice(i, 1);
+            continue;
+          }
+
+          this.ctx.save();
+          this.ctx.globalAlpha = p.opacity;
+          this.ctx.translate(p.x, p.y);
+          this.ctx.rotate((p.rotation * Math.PI) / 180);
+          this.ctx.fillStyle = p.color;
+          this.ctx.shadowBlur = 10;
+          this.ctx.shadowColor = p.color;
+
+          if (p.shape === 'rect') {
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
+          } else {
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+
+          this.ctx.restore();
+        }
+
+        if (this.isCelebrating) {
+          if (this.bannerScale < 1) this.bannerScale += 0.05;
+
+          this.ctx.save();
+          this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+          this.ctx.scale(this.bannerScale, this.bannerScale);
+
+          this.ctx.shadowBlur = 30;
+          this.ctx.shadowColor = '#ffb703';
+          this.ctx.fillStyle = '#ffb703';
+          this.ctx.font = '900 52px Orbitron';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('VICTORY!', 0, 0);
+
+          this.ctx.shadowColor = '#00f0ff';
+          this.ctx.fillStyle = '#ffffff';
+          this.ctx.font = '700 20px Rajdhani';
+          this.ctx.fillText('WINNER WINNER HONORED HERO', 0, 40);
+          this.ctx.restore();
+        }
+      }
+    }
+
+    // ==========================================
+    // GAME CLIENT LOGIC & SOCKETS
+    // ==========================================
     const socket = io();
     let currentGameState = null;
     let currentUser = null;
 
+    const boardCanvas = document.getElementById('board-canvas');
+    const vfx = new VFXEngine(boardCanvas);
+
     // AUDIO SYNTHESIZER ESPORTS SFX
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSFX(freq, type = 'sine', duration = 0.2) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = type;
@@ -224,7 +325,7 @@
       const phone = document.getElementById('user-phone').value;
       if (!phone) return alert('Masukkan Nomor HP!');
       currentUser = { phone, name: `Hero_${phone.slice(-4)}` };
-      socket.emit('join_room', { roomId: 'room_main', phone: phone });
+      socket.emit('join_room', { roomId: 'room_main', phone: phone, name: currentUser.name });
     }
 
     async function buyGold(amount, gold) {
@@ -242,28 +343,26 @@
       }
     }
 
-    // RENDER BOARD CANVAS BERGAYA ESPORTS CYBER
     function renderBoard() {
-      const canvas = document.getElementById('board-canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const ctx = boardCanvas.getContext('2d');
+      ctx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
 
       // Gradient Background Canvas
-      const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      const bgGrad = ctx.createLinearGradient(0, 0, boardCanvas.width, boardCanvas.height);
       bgGrad.addColorStop(0, '#0a0e1a');
       bgGrad.addColorStop(1, '#020617');
       ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
 
-      // Render 30 Petak Board Modern
+      // Render 30 Petak Board
       for (let i = 0; i < 30; i++) {
         const x = (i % 10) * 74 + 30;
         const y = Math.floor(i / 10) * 155 + 45;
 
         ctx.shadowBlur = 10;
-        if (i % 5 === 0) {
+        if (i % 5 === 0 && i > 0) {
           ctx.fillStyle = '#ffb703'; ctx.shadowColor = '#ffb703'; // Petak Kuis
-        } else if (i % 7 === 0) {
+        } else if (i % 7 === 0 && i > 0) {
           ctx.fillStyle = '#ff0055'; ctx.shadowColor = '#ff0055'; // Petak Trap
         } else {
           ctx.fillStyle = i % 2 === 0 ? '#00f0ff' : '#7000ff';
@@ -277,11 +376,11 @@
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#ffffff';
         ctx.font = '700 13px Orbitron';
-        if (i % 5 === 0) ctx.fillText('❓ KUIS', x + 8, y + 34);
+        if (i % 5 === 0 && i > 0) ctx.fillText('❓ KUIS', x + 8, y + 34);
         else ctx.fillText(`${i + 1}`, x + 24, y + 34);
       }
 
-      // Render Avatar/Pion Player
+      // Render Avatar Player
       if (currentGameState?.players) {
         currentGameState.players.forEach((p, idx) => {
           const x = (p.position % 10) * 74 + 52 + (idx * 3);
@@ -296,7 +395,17 @@
           ctx.stroke();
         });
       }
+
+      // Overlay Partikel VFX Kemenangan
+      vfx.updateAndRender();
     }
+
+    // GAME LOOP (60 FPS)
+    function gameLoop() {
+      renderBoard();
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
 
     // TAUNT BUBBLE SYNC
     function sendTaunt(emote) {
@@ -328,22 +437,48 @@
 
       setTimeout(() => {
         playSFX(1000, 'triangle', 0.5);
-        if (data.newPosition % 5 === 0) {
+        wheelCanvas.style.transform = 'rotate(0deg)';
+
+        if (data.triggerQuiz && data.quizPrompt) {
+          document.getElementById('quiz-question').innerText = data.quizPrompt.question;
+          document.getElementById('quiz-img').src = data.quizPrompt.imageUrl;
+          
+          data.quizPrompt.options.forEach((optText, idx) => {
+            const btn = document.getElementById(`opt-${idx}`);
+            if (btn) btn.innerText = optText;
+          });
+          
           document.getElementById('quiz-modal').style.display = 'flex';
         }
-        wheelCanvas.style.transform = 'rotate(0deg)';
       }, 4000);
     });
 
-    function answerQuiz(opt) {
+    function answerQuiz(optIndex) {
       playSFX(1400, 'sine', 0.3);
-      alert('TRIVIA CLEARED! +500 Gold');
+      socket.emit('submit_quiz_answer', { selectedIndex: optIndex });
       document.getElementById('quiz-modal').style.display = 'none';
     }
 
+    socket.on('quiz_result', (res) => {
+      alert(res.message);
+    });
+
+    function triggerSabotage(targetId, itemId) {
+      socket.emit('req_use_sabotage', { targetId, itemId });
+    }
+
+    socket.on('sabotage_executed', (data) => {
+      playSFX(400, 'sawtooth', 0.5);
+      alert(data.effectSummary);
+    });
+
+    socket.on('game_finished', (winnerData) => {
+      playSFX(1500, 'triangle', 0.8);
+      vfx.spawnVictoryBurst();
+    });
+
     socket.on('room_state_update', (state) => {
       currentGameState = state;
-      renderBoard();
       updateUI();
     });
 
@@ -352,18 +487,45 @@
       const list = document.getElementById('player-list');
       list.innerHTML = '';
 
+      const me = currentGameState.players.find(p => p.id === socket.id);
+      if (me && me.isFrozen) {
+        document.getElementById('freeze-overlay').style.display = 'flex';
+      } else {
+        document.getElementById('freeze-overlay').style.display = 'none';
+      }
+
       currentGameState.players.forEach(p => {
         const div = document.createElement('div');
-        div.style.cssText = "background: var(--card-gradient); padding:8px 12px; border-radius:8px; border:1px solid rgba(0,240,255,0.2); font-size:12px;";
-        div.innerHTML = `<strong>${p.name}</strong> | Petak ${p.position} | 💎 ${p.gold}`;
+        div.style.cssText = "background: var(--card-gradient); padding:8px 12px; border-radius:8px; border:1px solid rgba(0,240,255,0.2); font-size:12px; display:flex; justify-content:space-between; align-items:center;";
+        
+        let sabotageBtns = '';
+        if (p.id !== socket.id && currentGameState.currentTurn === socket.id) {
+          sabotageBtns = `
+            <span>
+              <button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'SWAP')">SWAP</button>
+              <button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'FREEZE')">ICE</button>
+            </span>
+          `;
+        }
+
+        div.innerHTML = `<div><strong>${p.name}</strong><br>Pos: ${p.position} | 💎 ${p.gold}</div>${sabotageBtns}`;
         list.appendChild(div);
       });
 
       const modal = document.getElementById('wheel-modal');
-      if (currentGameState.gameState === 'PLAYING' && currentGameState.currentTurn === socket.id) {
-        modal.style.display = 'flex';
-      } else {
-        modal.style.display = 'none';
+      const turnIndicator = document.getElementById('turn-indicator');
+
+      if (currentGameState.gameState === 'PLAYING') {
+        if (currentGameState.currentTurn === socket.id) {
+          modal.style.display = 'flex';
+          turnIndicator.innerText = `GILIRANMU! (${currentGameState.timeRemaining}s)`;
+          turnIndicator.style.color = '#00f0ff';
+        } else {
+          modal.style.display = 'none';
+          const currPlayer = currentGameState.players.find(p => p.id === currentGameState.currentTurn);
+          turnIndicator.innerText = `GILIRAN: ${currPlayer ? currPlayer.name : '...'} (${currentGameState.timeRemaining}s)`;
+          turnIndicator.style.color = '#ffb703';
+        }
       }
     }
 
