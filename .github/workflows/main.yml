@@ -28,19 +28,24 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      # 4. Install Dependencies & Copy index.html secara Otomatis
+      # 4. Prepare Client, Package.json, & Capacitor
       - name: Install Dependencies & Prepare Capacitor
         run: |
           cd BrillianceOrBlessed/client
+          
+          # Buat package.json jika belum ada agar Capacitor tidak error
+          if [ ! -f package.json ]; then
+            echo '{"name": "brilliance-client", "version": "1.0.0"}' > package.json
+          fi
+
+          # Buat folder www dan cari file index.html
+          mkdir -p www
+          find . -maxdepth 3 -iname "index.html" -not -path "./www/*" -exec cp {} www/index.html \;
+
+          # Install Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
           
-          # Buat folder www
-          mkdir -p www
-          
-          # Cari file index.html di mana pun posisinya dalam folder client lalu salin ke www/
-          find . -maxdepth 3 -iname "index.html" -exec cp {} www/ index.html \;
-          
-          # Inisialisasi Capacitor
+          # Inisialisasi & Sync Capacitor
           npx cap init "BrillianceOrBlessed" "com.brilliance.app" --web-dir www
           npx cap add android
           npx cap sync android
