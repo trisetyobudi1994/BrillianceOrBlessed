@@ -21,54 +21,54 @@ jobs:
         with:
           node-version: 18
 
-      # 3. Setup Java JDK 17 (Wajib untuk Capacitor)
+      # 3. Setup Java JDK 17 & Aktifkan Cache Resmi Gradle
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
+          cache: 'gradle'
 
       # 4. Prepare Client, Package.json, & Capacitor
       - name: Install Dependencies & Prepare Capacitor
         run: |
           cd BrillianceOrBlessed/client
           
-          # Buat package.json darurat jika tidak ada
           if [ ! -f package.json ]; then
             echo '{"name": "brilliance-client", "version": "1.0.0"}' > package.json
           fi
 
-          # Buat folder www & autodetect index.html
           mkdir -p www
           find . -maxdepth 3 -iname "index.html" -not -path "./www/*" -exec cp {} www/index.html \;
 
-          # Install & Inisialisasi Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "BrillianceOrBlessed" "com.brilliance.app" --web-dir www
           npx cap add android
           npx cap sync android
 
-      # 5. Fix Deprecated Jetifier Properties
-      - name: Fix gradle.properties
+      # 5. Fix Jetifier & Upgrade Gradle ke Versi 8.7
+      - name: Fix gradle.properties & Upgrade Gradle Wrapper
         run: |
-          PROPERTIES_FILE="BrillianceOrBlessed/client/android/gradle.properties"
-          if [ -f "$PROPERTIES_FILE" ]; then
-            sed -i 's/android.jetifier.blacklist/android.jetifier.ignorelist/g' "$PROPERTIES_FILE"
+          cd BrillianceOrBlessed/client/android
+          
+          # Fix deprecated Jetifier
+          if [ -f "gradle.properties" ]; then
+            sed -i 's/android.jetifier.blacklist/android.jetifier.ignorelist/g' gradle.properties
+          fi
+          
+          # Paksa naik versi ke Gradle 8.7 untuk menghindari error Jar bcprov
+          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            sed -i 's/gradle-8.2.1-all.zip/gradle-8.7-all.zip/g' gradle/wrapper/gradle-wrapper.properties
           fi
 
-      # 6. MENCEGAH ERROR JAR: Hapus Cache Gradle yang Korup
-      - name: Clean Corrupted Gradle Caches
-        run: rm -rf ~/.gradle/caches/
-
-      # 7. Build APK Debug dengan Parameter Aman
+      # 6. Build APK Debug dengan Force Refresh
       - name: Build APK with Gradle
         run: |
           cd BrillianceOrBlessed/client/android
           chmod +x gradlew
-          # Menambahkan --no-parallel dan --no-build-cache agar proses download library tidak bentrok
-          ./gradlew assembleDebug --no-daemon --no-parallel --no-build-cache
+          ./gradlew assembleDebug --no-daemon --refresh-dependencies
 
-      # 8. Upload hasil APK
+      # 7. Upload hasil APK
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
