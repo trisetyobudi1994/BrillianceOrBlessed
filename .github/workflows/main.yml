@@ -21,12 +21,12 @@ jobs:
         with:
           node-version: 18
 
-      # 3. Setup Java JDK
+      # 3. Setup Java JDK ke versi 11 (Mencegah error Jar bcprov/Gradle)
       - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '11'
 
       # 4. Prepare Client & Capacitor
       - name: Install Dependencies & Prepare Capacitor
@@ -54,12 +54,12 @@ jobs:
             sed -i 's/android.jetifier.blacklist/android.jetifier.ignorelist/g' "$PROPERTIES_FILE"
           fi
 
-      # 6. Build APK Debug dengan Gradle
+      # 6. Build APK Debug dengan Gradle (Clean build)
       - name: Build APK with Gradle
         run: |
           cd BrillianceOrBlessed/client/android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew clean assembleDebug --no-daemon
 
       # 7. Upload hasil APK ke GitHub Actions Artifacts
       - name: Upload APK Artifact
