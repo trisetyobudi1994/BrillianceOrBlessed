@@ -1,14 +1,14 @@
 {
-  "name": "brilliance-or-blessed-server",
-  "version": "3.0.0",
-  "description": "Realtime Socket.IO backend for Brilliance or Blessed 3.0",
+  "name": "brilliance-server",
+  "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.19.2",
+    "mongoose": "^8.3.1",
     "socket.io": "^4.7.5"
   }
 }
