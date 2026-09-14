@@ -1,21 +1,39 @@
-name: Deploy to Railway
+name: Build Android APK
 
 on:
   push:
-    branches:
-      - main # Jalankan otomatis setiap ada push ke branch main
+    branches: [ main, master ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-      - name: Deploy to Railway
-        run: railway up --service server
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Install Dependencies
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm run build
+
+      - name: Initialize Capacitor
+        run: |
+          npx cap init "NamaGame" "com.namagame.app" --web-dir www
+          npx cap add android
+          npx cap sync android
+
+      - name: Build APK with Gradle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: game-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
