@@ -1,7 +1,0 @@
-{
-  "name": "brilliance-or-blessed-client",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "mkdir -p www && cp index.html www/"
-  }
-}
