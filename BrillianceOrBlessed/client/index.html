@@ -1,0 +1,4000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>Brilliance or Blessed 3.0</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0
+}
+
+:root{
+    --bg:#030914;
+    --bg2:#071426;
+    --panel:#0a1a2d;
+    --panel2:#0d2138;
+    --line:#173957;
+    --cyan:#19d9ff;
+    --blue:#267cff;
+    --green:#28e69a;
+    --yellow:#ffd84d;
+    --red:#ff4d6d;
+    --purple:#9b6cff;
+    --white:#f5fbff;
+    --muted:#8da8bd;
+    --shadow:0 15px 50px rgba(0,0,0,.4);
+}
+
+body{
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    background:
+        radial-gradient(circle at 15% 10%,rgba(25,217,255,.12),transparent 28%),
+        radial-gradient(circle at 85% 20%,rgba(155,108,255,.12),transparent 28%),
+        linear-gradient(135deg,#020711,#061426 55%,#020711);
+    color:var(--white);
+    min-height:100vh;
+    overflow-x:hidden;
+}
+
+button{
+    font:inherit;
+    border:0;
+    cursor:pointer;
+    color:white;
+}
+
+button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+}
+
+.app{
+    width:min(1200px,100%);
+    margin:auto;
+    min-height:100vh;
+    padding:18px;
+}
+
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:18px;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:900;
+    letter-spacing:.5px;
+}
+
+.logoIcon{
+    width:45px;
+    height:45px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    box-shadow:0 0 30px rgba(25,217,255,.25);
+    font-size:24px;
+}
+
+.logoText{
+    font-size:18px;
+}
+
+.logoText small{
+    display:block;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:600;
+    margin-top:2px;
+}
+
+.wallet{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+}
+
+.walletItem{
+    background:rgba(8,27,47,.85);
+    border:1px solid var(--line);
+    padding:8px 12px;
+    border-radius:12px;
+    font-weight:800;
+    font-size:13px;
+}
+
+section{
+    display:none;
+}
+
+section.active{
+    display:block;
+}
+
+.card{
+    background:linear-gradient(145deg,rgba(11,31,52,.96),rgba(5,17,31,.96));
+    border:1px solid var(--line);
+    border-radius:22px;
+    box-shadow:var(--shadow);
+}
+
+.homeHero{
+    padding:45px 25px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+}
+
+.homeHero:before{
+    content:"";
+    position:absolute;
+    width:450px;
+    height:450px;
+    border-radius:50%;
+    background:rgba(25,217,255,.08);
+    filter:blur(40px);
+    top:-250px;
+    left:50%;
+    transform:translateX(-50%);
+}
+
+.heroBadge{
+    display:inline-block;
+    padding:7px 14px;
+    border:1px solid rgba(25,217,255,.35);
+    background:rgba(25,217,255,.08);
+    border-radius:999px;
+    color:var(--cyan);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1.5px;
+    margin-bottom:15px;
+}
+
+h1{
+    font-size:clamp(34px,7vw,68px);
+    line-height:1;
+    font-weight:1000;
+    letter-spacing:-3px;
+}
+
+.gradientText{
+    background:linear-gradient(90deg,var(--cyan),#fff,var(--yellow));
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+.heroSub{
+    color:var(--muted);
+    max-width:700px;
+    margin:16px auto 25px;
+    line-height:1.6;
+}
+
+.mainPlay{
+    padding:17px 35px;
+    border-radius:16px;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    font-weight:1000;
+    box-shadow:0 10px 35px rgba(25,217,255,.2);
+    transition:.2s;
+}
+
+.mainPlay:hover{
+    transform:translateY(-2px) scale(1.02);
+}
+
+.menuGrid{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.menuBtn{
+    min-height:105px;
+    padding:15px;
+    border-radius:18px;
+    border:1px solid var(--line);
+    background:linear-gradient(145deg,#0b2036,#071526);
+    transition:.2s;
+    text-align:left;
+}
+
+.menuBtn:hover{
+    border-color:var(--cyan);
+    transform:translateY(-2px);
+}
+
+.menuIcon{
+    font-size:28px;
+    margin-bottom:9px;
+}
+
+.menuBtn b{
+    display:block;
+    font-size:14px;
+}
+
+.menuBtn small{
+    color:var(--muted);
+    display:block;
+    margin-top:4px;
+}
+
+.statsGrid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-top:18px;
+}
+
+.stat{
+    padding:16px;
+    text-align:center;
+}
+
+.stat b{
+    font-size:23px;
+    display:block;
+    margin-top:5px;
+}
+
+.stat span{
+    font-size:11px;
+    color:var(--muted);
+}
+
+.page{
+    padding:22px;
+}
+
+.pageHead{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+}
+
+.pageHead h2{
+    font-size:25px;
+}
+
+.backBtn{
+    background:#10283e;
+    border:1px solid var(--line);
+    padding:10px 15px;
+    border-radius:12px;
+}
+
+.modeGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+}
+
+.modeCard{
+    padding:25px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:#071727;
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.modeCard:hover{
+    transform:translateY(-3px);
+    border-color:var(--cyan);
+}
+
+.modeCard h3{
+    font-size:23px;
+    margin:8px 0;
+}
+
+.modeCard p{
+    color:var(--muted);
+    line-height:1.5;
+    font-size:13px;
+}
+
+.modeCard .big{
+    font-size:50px;
+}
+
+.modeTag{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:8px;
+    background:rgba(255,255,255,.06);
+    font-size:10px;
+    font-weight:900;
+}
+
+.gameTop{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+.gameStat{
+    padding:12px;
+    border:1px solid var(--line);
+    border-radius:15px;
+    background:#061525;
+    text-align:center;
+}
+
+.gameStat span{
+    display:block;
+    font-size:10px;
+    color:var(--muted);
+}
+
+.gameStat b{
+    display:block;
+    margin-top:4px;
+}
+
+.players{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.player{
+    padding:13px;
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:#061525;
+    text-align:center;
+    position:relative;
+}
+
+.player.me{
+    border-color:var(--cyan);
+    box-shadow:inset 0 0 25px rgba(25,217,255,.06);
+}
+
+.playerAvatar{
+    font-size:34px;
+}
+
+.playerName{
+    font-size:12px;
+    font-weight:900;
+    margin-top:5px;
+}
+
+.playerScore{
+    color:var(--yellow);
+    font-weight:900;
+    font-size:13px;
+    margin-top:3px;
+}
+
+.hitBadge{
+    position:absolute;
+    top:7px;
+    right:7px;
+    font-size:9px;
+    color:var(--red);
+}
+
+.gamePanel{
+    padding:22px;
+}
+
+.roundLine{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.progress{
+    height:7px;
+    background:#071322;
+    border-radius:99px;
+    overflow:hidden;
+    border:1px solid var(--line);
+}
+
+.progress span{
+    display:block;
+    height:100%;
+    background:linear-gradient(90deg,var(--cyan),var(--green));
+    transition:.3s;
+}
+
+.questionBox{
+    text-align:center;
+    padding:15px 0 20px;
+}
+
+.questionBox .category{
+    color:var(--cyan);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1px;
+}
+
+.questionBox h2{
+    font-size:clamp(21px,4vw,34px);
+    margin:12px auto 20px;
+    max-width:850px;
+}
+
+.timer{
+    font-size:35px;
+    font-weight:1000;
+    color:var(--yellow);
+    margin-bottom:15px;
+}
+
+.answerGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:11px;
+}
+
+.answer{
+    padding:17px;
+    background:#0a1d31;
+    border:1px solid var(--line);
+    border-radius:14px;
+    text-align:left;
+    transition:.15s;
+}
+
+.answer:hover{
+    border-color:var(--cyan);
+    background:#0d2942;
+}
+
+.answer.correct{
+    background:rgba(40,230,154,.16);
+    border-color:var(--green);
+}
+
+.answer.wrong{
+    background:rgba(255,77,109,.15);
+    border-color:var(--red);
+}
+
+.luckyMenu{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.luckyGameBtn{
+    padding:14px 8px;
+    background:#071a2d;
+    border:1px solid var(--line);
+    border-radius:14px;
+    font-weight:900;
+    transition:.2s;
+}
+
+.luckyGameBtn:hover,
+.luckyGameBtn.active{
+    border-color:var(--yellow);
+    background:rgba(255,216,77,.08);
+}
+
+.luckyStage{
+    min-height:350px;
+    display:grid;
+    place-items:center;
+    padding:20px;
+}
+
+.wheelWrap{
+    width:min(310px,75vw);
+    aspect-ratio:1;
+    position:relative;
+}
+
+.wheel{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    border:9px solid #102d45;
+    background:conic-gradient(
+        #19d9ff 0deg 45deg,
+        #9b6cff 45deg 90deg,
+        #28e69a 90deg 135deg,
+        #ffd84d 135deg 180deg,
+        #ff4d6d 180deg 225deg,
+        #267cff 225deg 270deg,
+        #28e69a 270deg 315deg,
+        #9b6cff 315deg 360deg
+    );
+    box-shadow:0 0 45px rgba(25,217,255,.16);
+    transition:transform 3.5s cubic-bezier(.1,.7,.1,1);
+    position:relative;
+}
+
+.wheel:after{
+    content:"";
+    position:absolute;
+    inset:25%;
+    background:#061321;
+    border:3px solid #173957;
+    border-radius:50%;
+}
+
+.pointer{
+    position:absolute;
+    top:-13px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:3;
+    color:var(--yellow);
+    font-size:30px;
+}
+
+.wheelCenter{
+    position:absolute;
+    inset:0;
+    display:grid;
+    place-items:center;
+    z-index:2;
+    font-size:32px;
+}
+
+.spinBtn{
+    margin-top:18px;
+    padding:14px 30px;
+    border-radius:13px;
+    background:linear-gradient(135deg,var(--yellow),#ff9f1c);
+    color:#07111f;
+    font-weight:1000;
+}
+
+.slots{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+}
+
+.reel{
+    width:90px;
+    height:100px;
+    display:grid;
+    place-items:center;
+    font-size:45px;
+    border-radius:17px;
+    background:linear-gradient(#102a43,#061321);
+    border:2px solid var(--line);
+    box-shadow:inset 0 0 30px rgba(0,0,0,.35);
+}
+
+.boxGrid{
+    display:grid;
+    grid-template-columns:repeat(3,100px);
+    gap:14px;
+}
+
+.mysteryBox{
+    height:105px;
+    border-radius:18px;
+    background:linear-gradient(145deg,#132f49,#071625);
+    border:2px solid var(--line);
+    font-size:42px;
+    transition:.2s;
+}
+
+.mysteryBox:hover{
+    transform:translateY(-5px) rotate(-2deg);
+    border-color:var(--yellow);
+}
+
+.cards{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.luckyCard{
+    width:115px;
+    height:165px;
+    perspective:800px;
+}
+
+.cardInner{
+    width:100%;
+    height:100%;
+    transition:transform .6s;
+    transform-style:preserve-3d;
+    position:relative;
+}
+
+.luckyCard.flipped .cardInner{
+    transform:rotateY(180deg);
+}
+
+.cardFront,
+.cardBack{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    border:2px solid var(--line);
+}
+
+.cardFront{
+    background:linear-gradient(145deg,#102f50,#071524);
+    font-size:40px;
+}
+
+.cardBack{
+    transform:rotateY(180deg);
+    background:#10273d;
+    font-size:28px;
+}
+
+.coin{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    display:grid;
+    place-items:center;
+    font-size:50px;
+    background:radial-gradient(circle at 35% 30%,#fff6a5,#ffd84d 45%,#b47a00);
+    color:#704c00;
+    border:8px solid #9e7100;
+    box-shadow:0 0 45px rgba(255,216,77,.25);
+    transition:transform 1s;
+}
+
+.targetArea{
+    width:min(420px,90vw);
+    height:260px;
+    position:relative;
+    border:2px solid var(--line);
+    border-radius:20px;
+    background:
+        linear-gradient(rgba(25,217,255,.03) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(25,217,255,.03) 1px,transparent 1px),
+        #061525;
+    background-size:25px 25px;
+    overflow:hidden;
+}
+
+.target{
+    position:absolute;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:radial-gradient(circle,#fff 4%,var(--red) 5% 25%,#fff 26% 42%,var(--red) 43% 60%,#fff 61%);
+    border:2px solid #fff;
+    cursor:pointer;
+    transition:.15s;
+}
+
+.riskBar{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin:15px 0;
+    flex-wrap:wrap;
+}
+
+.riskBtn{
+    padding:9px 14px;
+    border-radius:10px;
+    background:#0a1d31;
+    border:1px solid var(--line);
+    font-size:11px;
+    font-weight:900;
+}
+
+.riskBtn.active{
+    border-color:var(--yellow);
+    color:var(--yellow);
+}
+
+.actionBar{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top:18px;
+}
+
+.actionBtn{
+    padding:11px 16px;
+    border-radius:11px;
+    background:#10283e;
+    border:1px solid var(--line);
+    font-weight:800;
+    font-size:12px;
+}
+
+.actionBtn.danger{
+    border-color:rgba(255,77,109,.4);
+    color:#ff8799;
+}
+
+.aiNote{
+    margin-top:12px;
+    color:var(--muted);
+    font-size:11px;
+    text-align:center;
+}
+
+.itemGrid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.item{
+    padding:18px;
+    border-radius:18px;
+    border:1px solid var(--line);
+    background:#071827;
+}
+
+.itemIcon{
+    font-size:35px;
+}
+
+.item h3{
+    margin:8px 0 5px;
+}
+
+.item p{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.45;
+    min-height:50px;
+}
+
+.price{
+    margin:10px 0;
+    color:var(--yellow);
+    font-weight:900;
+}
+
+.item button{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    background:linear-gradient(135deg,#113b5c,#0b2640);
+    border:1px solid var(--line);
+}
+
+.avatarGrid{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:11px;
+}
+
+.avatar{
+    padding:15px 8px;
+    text-align:center;
+    border-radius:16px;
+    border:1px solid var(--line);
+    background:#071827;
+    transition:.2s;
+}
+
+.avatar:hover{
+    border-color:var(--cyan);
+}
+
+.avatar.selected{
+    border-color:var(--yellow);
+    box-shadow:0 0 25px rgba(255,216,77,.1);
+}
+
+.avatar span{
+    font-size:38px;
+    display:block;
+}
+
+.avatar b{
+    display:block;
+    font-size:11px;
+    margin-top:8px;
+}
+
+.inventory{
+    margin-top:18px;
+}
+
+.inventoryGrid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+}
+
+.inventoryItem{
+    padding:13px;
+    background:#061525;
+    border:1px solid var(--line);
+    border-radius:13px;
+    text-align:center;
+}
+
+.inventoryItem strong{
+    display:block;
+    color:var(--yellow);
+    margin-top:4px;
+}
+
+.leaderRows{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.leader{
+    display:grid;
+    grid-template-columns:50px 1fr 100px;
+    align-items:center;
+    gap:10px;
+    padding:13px;
+    border:1px solid var(--line);
+    border-radius:13px;
+    background:#061525;
+}
+
+.leader.rank1{
+    border-color:var(--yellow);
+}
+
+.rank{
+    font-size:22px;
+    text-align:center;
+}
+
+.settingsRow{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px;
+    border-bottom:1px solid var(--line);
+}
+
+.switch{
+    width:50px;
+    height:27px;
+    border-radius:99px;
+    background:#172b3d;
+    padding:3px;
+}
+
+.switch i{
+    display:block;
+    width:21px;
+    height:21px;
+    border-radius:50%;
+    background:#fff;
+    transition:.2s;
+}
+
+.switch.on{
+    background:var(--green);
+}
+
+.switch.on i{
+    transform:translateX(23px);
+}
+
+.result{
+    text-align:center;
+    padding:35px 20px;
+}
+
+.trophy{
+    font-size:75px;
+    animation:float 2s ease-in-out infinite;
+}
+
+.result h2{
+    font-size:40px;
+    margin:10px 0;
+}
+
+.rewardGrid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    max-width:600px;
+    margin:22px auto;
+}
+
+.reward{
+    padding:18px;
+    background:#071827;
+    border:1px solid var(--line);
+    border-radius:15px;
+}
+
+.reward b{
+    display:block;
+    font-size:25px;
+    color:var(--yellow);
+}
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:25px;
+    transform:translate(-50%,120px);
+    padding:13px 18px;
+    background:#102b43;
+    border:1px solid var(--cyan);
+    border-radius:13px;
+    box-shadow:var(--shadow);
+    z-index:100;
+    opacity:0;
+    transition:.3s;
+    font-size:13px;
+    font-weight:800;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+    opacity:1;
+}
+
+.overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(1,6,12,.78);
+    backdrop-filter:blur(8px);
+    z-index:90;
+    display:none;
+    place-items:center;
+    padding:20px;
+}
+
+.overlay.show{
+    display:grid;
+}
+
+.modal{
+    width:min(500px,100%);
+    background:#081a2d;
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:var(--shadow);
+}
+
+.modal h3{
+    margin-bottom:10px;
+}
+
+.modal p{
+    color:var(--muted);
+    line-height:1.5;
+    font-size:13px;
+}
+
+.sabotageTargets{
+    display:grid;
+    gap:8px;
+    margin:15px 0;
+}
+
+.targetPlayer{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px;
+    border-radius:12px;
+    border:1px solid var(--line);
+    background:#061525;
+}
+
+.targetPlayer:hover{
+    border-color:var(--red);
+}
+
+.glitch{
+    animation:glitch .12s infinite;
+}
+
+.confused .answer{
+    transform:rotate(.7deg);
+}
+
+.shake{
+    animation:shake .25s;
+}
+
+.confetti{
+    position:fixed;
+    top:-20px;
+    width:8px;
+    height:15px;
+    z-index:120;
+    animation:fall 2.2s linear forwards;
+}
+
+@keyframes fall{
+    to{
+        transform:translateY(110vh) rotate(720deg);
+        opacity:0;
+    }
+}
+
+@keyframes float{
+    50%{transform:translateY(-8px)}
+}
+
+@keyframes shake{
+    25%{transform:translateX(-8px)}
+    50%{transform:translateX(8px)}
+    75%{transform:translateX(-5px)}
+}
+
+@keyframes glitch{
+    25%{transform:translate(3px,-2px)}
+    50%{transform:translate(-3px,2px)}
+    75%{transform:translate(2px,1px)}
+}
+
+@media(max-width:900px){
+    .menuGrid{grid-template-columns:1fr 1fr}
+    .statsGrid{grid-template-columns:1fr 1fr}
+    .players{grid-template-columns:1fr 1fr}
+    .itemGrid{grid-template-columns:1fr 1fr}
+    .avatarGrid{grid-template-columns:repeat(4,1fr)}
+    .inventoryGrid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:650px){
+    .app{padding:10px}
+    header{align-items:flex-start}
+    .wallet{max-width:210px}
+    .menuGrid{grid-template-columns:1fr 1fr}
+    .modeGrid{grid-template-columns:1fr}
+    .answerGrid{grid-template-columns:1fr}
+    .gameTop{grid-template-columns:1fr 1fr 1fr}
+    .gamePanel,.page{padding:15px}
+    .luckyMenu{grid-template-columns:repeat(2,1fr)}
+    .itemGrid{grid-template-columns:1fr 1fr}
+    .avatarGrid{grid-template-columns:repeat(3,1fr)}
+    .boxGrid{grid-template-columns:repeat(3,80px)}
+    .mysteryBox{height:85px}
+    .rewardGrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="logo">
+        <div class="logoIcon">🧠</div>
+        <div class="logoText">
+            BRILLIANCE OR BLESSED
+            <small>GAME SHOW • SEASON 3</small>
+        </div>
+    </div>
+
+    <div class="wallet">
+        <div class="walletItem">🪙 <span id="coins">500</span></div>
+        <div class="walletItem">💎 <span id="gems">25</span></div>
+        <div class="walletItem">⭐ LV <span id="level">1</span></div>
+    </div>
+</header>
+
+<!-- HOME -->
+<section id="home" class="active">
+
+    <div class="card homeHero">
+
+        <div class="heroBadge">THE ULTIMATE PSYCHOLOGY GAME SHOW</div>
+
+        <h1>
+            BRILLIANCE<br>
+            <span class="gradientText">OR BLESSED?</span>
+        </h1>
+
+        <p class="heroSub">
+            Apakah kemenanganmu berasal dari kecerdasan,
+            keberuntungan, atau kemampuan mengganggu lawan?
+            Pilih jalanmu dan buktikan siapa yang paling beruntung.
+        </p>
+
+        <button class="mainPlay" onclick="openModeSelect()">
+            ▶ PLAY NOW
+        </button>
+
+    </div>
+
+    <div class="menuGrid">
+
+        <button class="menuBtn" onclick="openModeSelect()">
+            <div class="menuIcon">🎮</div>
+            <b>PLAY GAME</b>
+            <small>Smart / Lucky Path</small>
+        </button>
+
+        <button class="menuBtn" onclick="show('avatar')">
+            <div class="menuIcon">👤</div>
+            <b>AVATAR</b>
+            <small>Pilih karakter</small>
+        </button>
+
+        <button class="menuBtn" onclick="show('shop')">
+            <div class="menuIcon">🛒</div>
+            <b>SABOTAGE SHOP</b>
+            <small>Buy & use items</small>
+        </button>
+
+        <button class="menuBtn" onclick="show('leaderboard')">
+            <div class="menuIcon">🏆</div>
+            <b>LEADERBOARD</b>
+            <small>Top players</small>
+        </button>
+
+        <button class="menuBtn" onclick="dailyReward()">
+            <div class="menuIcon">🎁</div>
+            <b>DAILY REWARD</b>
+            <small>Reward harian</small>
+        </button>
+
+        <button class="menuBtn" onclick="show('settings')">
+            <div class="menuIcon">⚙️</div>
+            <b>SETTINGS</b>
+            <small>Sound & data</small>
+        </button>
+
+        <button class="menuBtn" onclick="show('profile')">
+            <div class="menuIcon">📊</div>
+            <b>PROFILE</b>
+            <small>Statistik pemain</small>
+        </button>
+
+        <button class="menuBtn" onclick="showRules()">
+            <div class="menuIcon">❓</div>
+            <b>HOW TO PLAY</b>
+            <small>Game rules</small>
+        </button>
+
+    </div>
+
+    <div class="statsGrid">
+
+        <div class="card stat">
+            <span>WIN</span>
+            <b id="homeWins">0</b>
+        </div>
+
+        <div class="card stat">
+            <span>XP</span>
+            <b id="homeXP">0</b>
+        </div>
+
+        <div class="card stat">
+            <span>LUCK</span>
+            <b id="homeLuck">50%</b>
+        </div>
+
+        <div class="card stat">
+            <span>STREAK</span>
+            <b id="homeStreak">0</b>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- MODE -->
+<section id="mode">
+
+    <div class="card page">
+
+        <div class="pageHead">
+            <h2>🎮 CHOOSE YOUR PATH</h2>
+            <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div class="modeGrid">
+
+            <div class="modeCard" onclick="startGame('smart')">
+                <span class="modeTag">SKILL BASED</span>
+                <div class="big">🧠</div>
+                <h3>SMART PATH</h3>
+                <p>
+                    Jawab pertanyaan logika, matematika,
+                    pengetahuan umum, memory dan speed.
+                    Semakin cepat menjawab, semakin besar reward.
+                </p>
+            </div>
+
+            <div class="modeCard" onclick="startGame('lucky')">
+                <span class="modeTag">LUCK BASED</span>
+                <div class="big">🍀</div>
+                <h3>LUCKY PATH</h3>
+                <p>
+                    Gunakan keberuntunganmu melalui Wheel,
+                    Slots, Mystery Box, Cards, Coin Flip
+                    atau Lucky Target.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="aiNote">
+            💡 Semua reward dalam game adalah virtual.
+            Tidak ada taruhan uang asli.
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- GAME -->
+<section id="game">
+
+    <div class="gameTop">
+
+        <div class="gameStat">
+            <span>ROUND</span>
+            <b><span id="round">1</span> / 5</b>
+        </div>
+
+        <div class="gameStat">
+            <span>JACKPOT</span>
+            <b>🪙 <span id="jackpot">500</span></b>
+        </div>
+
+        <div class="gameStat">
+            <span>YOUR SCORE</span>
+            <b>🪙 <span id="score">0</span></b>
+        </div>
+
+    </div>
+
+    <div id="players" class="players"></div>
+
+    <div class="card gamePanel">
+
+        <div class="roundLine">
+            <strong id="gameModeTitle">🧠 SMART PATH</strong>
+            <span id="luckText">Luck 50%</span>
+        </div>
+
+        <div class="progress">
+            <span id="progress"></span>
+        </div>
+
+        <!-- SMART -->
+        <div id="smartGame">
+
+            <div class="questionBox">
+
+                <div class="category" id="questionCategory">
+                    LOGIC
+                </div>
+
+                <h2 id="question">
+                    Loading question...
+                </h2>
+
+                <div class="timer" id="timer">
+                    10
+                </div>
+
+            </div>
+
+            <div id="answers" class="answerGrid"></div>
+
+        </div>
+
+
+        <!-- LUCKY -->
+        <div id="luckyGame" style="display:none">
+
+            <div class="riskBar">
+
+                <button class="riskBtn active" onclick="setRisk('safe',this)">
+                    SAFE ×1
+                </button>
+
+                <button class="riskBtn" onclick="setRisk('risk',this)">
+                    RISK ×2
+                </button>
+
+                <button class="riskBtn" onclick="setRisk('insane',this)">
+                    INSANE ×5
+                </button>
+
+            </div>
+
+            <div class="luckyMenu">
+
+                <button class="luckyGameBtn active"
+                        onclick="selectLucky('wheel',this)">
+                    🎡 Wheel
+                </button>
+
+                <button class="luckyGameBtn"
+                        onclick="selectLucky('slots',this)">
+                    🎰 Slots
+                </button>
+
+                <button class="luckyGameBtn"
+                        onclick="selectLucky('box',this)">
+                    🎁 Mystery
+                </button>
+
+                <button class="luckyGameBtn"
+                        onclick="selectLucky('cards',this)">
+                    🃏 Cards
+                </button>
+
+                <button class="luckyGameBtn"
+                        onclick="selectLucky('coin',this)">
+                    🪙 Coin
+                </button>
+
+                <button class="luckyGameBtn"
+                        onclick="selectLucky('target',this)">
+                    🎯 Target
+                </button>
+
+            </div>
+
+            <div id="luckyStage" class="luckyStage"></div>
+
+        </div>
+
+
+        <div class="actionBar">
+
+            <button class="actionBtn danger"
+                    onclick="openSabotage()">
+                🧨 SABOTAGE
+            </button>
+
+            <button class="actionBtn"
+                    onclick="sendTaunt()">
+                💬 TAUNT
+            </button>
+
+            <button class="actionBtn"
+                    onclick="confirmExit()">
+                🚪 EXIT
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- SHOP -->
+<section id="shop">
+
+    <div class="card page">
+
+        <div class="pageHead">
+            <div>
+                <h2>🛒 SABOTAGE SHOP</h2>
+                <small style="color:var(--muted)">
+                    Gunakan item untuk mengganggu lawan.
+                </small>
+            </div>
+            <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div class="itemGrid">
+
+            <div class="item">
+                <div class="itemIcon">🌀</div>
+                <h3>CONFUSE</h3>
+                <p>Mengacak posisi jawaban lawan.</p>
+                <div class="price">💎 5</div>
+                <button onclick="buyItem('confuse',5)">
+                    BUY
+                </button>
+            </div>
+
+            <div class="item">
+                <div class="itemIcon">⏱️</div>
+                <h3>TIME ATTACK</h3>
+                <p>Mengurangi waktu lawan selama 3 detik.</p>
+                <div class="price">💎 7</div>
+                <button onclick="buyItem('time',7)">
+                    BUY
+                </button>
+            </div>
+
+            <div class="item">
+                <div class="itemIcon">🔀</div>
+                <h3>SHUFFLE</h3>
+                <p>Mengubah urutan pilihan dan mengacaukan fokus.</p>
+                <div class="price">💎 6</div>
+                <button onclick="buyItem('shuffle',6)">
+                    BUY
+                </button>
+            </div>
+
+            <div class="item">
+                <div class="itemIcon">📺</div>
+                <h3>SCREEN GLITCH</h3>
+                <p>Membuat tampilan lawan terganggu sementara.</p>
+                <div class="price">💎 4</div>
+                <button onclick="buyItem('glitch',4)">
+                    BUY
+                </button>
+            </div>
+
+        </div>
+
+        <div class="inventory">
+
+            <h3 style="margin-bottom:10px">
+                🎒 INVENTORY
+            </h3>
+
+            <div id="inventory" class="inventoryGrid"></div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- AVATAR -->
+<section id="avatar">
+
+    <div class="card page">
+
+        <div class="pageHead">
+            <h2>👤 CHOOSE AVATAR</h2>
+            <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div id="avatarGrid" class="avatarGrid"></div>
+
+    </div>
+
+</section>
+
+
+<!-- LEADERBOARD -->
+<section id="leaderboard">
+
+    <div class="card page">
+
+        <div class="pageHead">
+            <h2>🏆 LEADERBOARD</h2>
+            <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div id="leaderRows" class="leaderRows"></div>
+
+    </div>
+
+</section>
+
+
+<!-- PROFILE -->
+<section id="profile">
+
+    <div class="card page">
+
+        <div class="pageHead">
+            <h2>📊 PLAYER PROFILE</h2>
+            <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div class="statsGrid">
+
+            <div class="card stat">
+                <span>LEVEL</span>
+                <b id="profileLevel">1</b>
+            </div>
+
+            <div class="card stat">
+                <span>WINS</span>
+                <b id="profileWins">0</b>
+            </div>
+
+            <div class="card stat">
+                <span>XP</span>
+                <b id="profileXP">0</b>
+            </div>
+
+            <div class="card stat">
+                <span>BEST SCORE</span>
+                <b id="profileBest">0</b>
+            </div>
+
+        </div>
+
+        <div class="card" style="padding:20px;margin-top:15px">
+
+            <h3>🎯 Player Information</h3>
+
+            <p style="color:var(--muted);margin-top:10px">
+                Avatar:
+                <strong id="profileAvatar"></strong>
+            </p>
+
+            <p style="color:var(--muted);margin-top:8px">
+                Luck:
+                <strong id="profileLuck"></strong>
+            </p>
+
+            <p style="color:var(--muted);margin-top:8px">
+                Sabotage digunakan:
+                <strong id="profileSabotage"></strong>
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- SETTINGS -->
+<section id="settings">
+
+    <div class="card page">
+
+        <div class="pageHead">
+            <h2>⚙️ SETTINGS</h2>
+            <button class="backBtn" onclick="home()">← Back</button>
+        </div>
+
+        <div class="settingsRow">
+
+            <div>
+                <b>🔊 Sound Effect</b>
+                <small style="display:block;color:var(--muted)">
+                    Game sound & notification
+                </small>
+            </div>
+
+            <button id="soundSwitch"
+                    class="switch on"
+                    onclick="toggleSound()">
+                <i></i>
+            </button>
+
+        </div>
+
+        <div class="settingsRow">
+
+            <div>
+                <b>💾 Game Data</b>
+                <small style="display:block;color:var(--muted)">
+                    Data tersimpan di browser
+                </small>
+            </div>
+
+            <button class="actionBtn danger"
+                    onclick="resetData()">
+                RESET
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- RESULT -->
+<section id="result">
+
+    <div class="card result">
+
+        <div class="trophy" id="resultTrophy">
+            🏆
+        </div>
+
+        <h2 id="resultTitle">
+            YOU WIN!
+        </h2>
+
+        <p id="resultText" style="color:var(--muted)">
+            Excellent performance.
+        </p>
+
+        <div class="rewardGrid">
+
+            <div class="reward">
+                <span>COINS</span>
+                <b id="rewardCoins">+0</b>
+            </div>
+
+            <div class="reward">
+                <span>GEMS</span>
+                <b id="rewardGems">+0</b>
+            </div>
+
+            <div class="reward">
+                <span>XP</span>
+                <b id="rewardXP">+0</b>
+            </div>
+
+        </div>
+
+        <div id="resultLeaderboard"></div>
+
+        <div class="actionBar">
+
+            <button class="mainPlay"
+                    onclick="openModeSelect()">
+                ▶ PLAY AGAIN
+            </button>
+
+            <button class="actionBtn"
+                    onclick="home()">
+                🏠 HOME
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+</div>
+
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+
+<!-- MODAL -->
+<div id="overlay" class="overlay">
+
+    <div class="modal">
+
+        <h3 id="modalTitle">
+            Confirmation
+        </h3>
+
+        <p id="modalText">
+            Are you sure?
+        </p>
+
+        <div id="modalContent"></div>
+
+        <div class="actionBar">
+
+            <button class="actionBtn"
+                    onclick="closeModal()">
+                CANCEL
+            </button>
+
+            <button id="modalConfirm"
+                    class="actionBtn"
+                    style="background:linear-gradient(135deg,var(--cyan),var(--blue))">
+                OK
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   BRILLIANCE OR BLESSED 3.0
+   ========================================================= */
+
+const KEY="bob_v3";
+
+const defaultState={
+    coins:500,
+    gems:25,
+    xp:0,
+    level:1,
+    wins:0,
+    losses:0,
+    streak:0,
+    bestScore:0,
+    luck:50,
+
+    selectedAvatar:0,
+
+    sound:true,
+
+    inventory:{
+        confuse:1,
+        time:1,
+        shuffle:1,
+        glitch:1
+    },
+
+    totalSabotage:0,
+
+    dailyDate:"",
+
+    ai:[
+        {
+            name:"FOX",
+            avatar:"🦊",
+            score:0,
+            hits:0
+        },
+        {
+            name:"CYBER",
+            avatar:"🤖",
+            score:0,
+            hits:0
+        },
+        {
+            name:"LUCKY",
+            avatar:"🧙",
+            score:0,
+            hits:0
+        }
+    ]
+};
+
+let state=loadState();
+
+let game={
+    mode:"smart",
+    round:1,
+    score:0,
+    jackpot:500,
+    timer:10,
+    interval:null,
+    locked:false,
+    risk:"safe",
+    luckyType:"wheel",
+    sabotagesUsed:0,
+    incomingHits:0,
+    question:null,
+    wheelRotation:0,
+    aiTimer:null,
+    targetHits:0
+};
+
+const avatars=[
+    ["👨‍🚀","Captain"],
+    ["🧙","Lucky Wizard"],
+    ["🤖","Cyber Bot"],
+    ["🦊","Lucky Fox"],
+    ["🐼","Panda"],
+    ["😎","Boss"],
+    ["👽","Alien"],
+    ["🔥","Phoenix"],
+    ["🦁","Lion King"],
+    ["🥷","Shadow"],
+    ["🐯","Tiger"],
+    ["👑","King"]
+];
+
+const questions=[
+
+    {
+        cat:"LOGIC",
+        q:"Jika 2 + 3 × 4 = ?",
+        a:["20","14","24","10"],
+        c:1
+    },
+
+    {
+        cat:"SCIENCE",
+        q:"Air membeku pada suhu...",
+        a:["0°C","10°C","50°C","-10°C"],
+        c:0
+    },
+
+    {
+        cat:"KNOWLEDGE",
+        q:"Apa ibu kota Indonesia?",
+        a:["Bandung","Surabaya","Jakarta","Medan"],
+        c:2
+    },
+
+    {
+        cat:"SCIENCE",
+        q:"Planet yang dikenal sebagai Planet Merah adalah...",
+        a:["Venus","Mars","Jupiter","Saturnus"],
+        c:1
+    },
+
+    {
+        cat:"ANIMAL",
+        q:"Hewan darat tercepat adalah...",
+        a:["Singa","Kuda","Cheetah","Harimau"],
+        c:2
+    },
+
+    {
+        cat:"MATH",
+        q:"5 × 6 = ?",
+        a:["25","30","35","40"],
+        c:1
+    },
+
+    {
+        cat:"GEOMETRY",
+        q:"Segitiga memiliki berapa sisi?",
+        a:["2","3","4","5"],
+        c:1
+    },
+
+    {
+        cat:"SCIENCE",
+        q:"Matahari merupakan sebuah...",
+        a:["Planet","Bintang","Satelit","Meteor"],
+        c:1
+    },
+
+    {
+        cat:"MATH",
+        q:"100 ÷ 4 = ?",
+        a:["20","25","30","40"],
+        c:1
+    },
+
+    {
+        cat:"LOGIC",
+        q:"Jika semua A adalah B dan semua B adalah C, maka...",
+        a:[
+            "Semua A adalah C",
+            "Semua C adalah A",
+            "Tidak ada hubungan",
+            "A berbeda dengan C"
+        ],
+        c:0
+    },
+
+    {
+        cat:"KNOWLEDGE",
+        q:"Berapa hari dalam satu minggu?",
+        a:["5","6","7","8"],
+        c:2
+    },
+
+    {
+        cat:"MATH",
+        q:"15 + 15 = ?",
+        a:["20","25","30","35"],
+        c:2
+    }
+
+];
+
+const taunts=[
+    "😎 Terlalu mudah!",
+    "🔥 Coba kejar aku!",
+    "😂 Hampir!",
+    "🧠 Think faster!",
+    "🍀 Lucky me!",
+    "👀 Aku mengawasimu!",
+    "💀 Round berikutnya!",
+    "⚡ Too slow!",
+    "🏆 Aku datang untuk menang!"
+];
+
+const luckySymbols=[
+    "🍀","💎","⭐","🔥","👑","🪙","🎯","🎁"
+];
+
+
+/* =========================================================
+   STORAGE
+   ========================================================= */
+
+function loadState(){
+
+    try{
+
+        const saved=JSON.parse(localStorage.getItem(KEY));
+
+        if(saved){
+
+            return {
+                ...defaultState,
+                ...saved,
+                inventory:{
+                    ...defaultState.inventory,
+                    ...(saved.inventory||{})
+                }
+            };
+
+        }
+
+    }catch(e){}
+
+    return JSON.parse(JSON.stringify(defaultState));
+}
+
+function saveState(){
+
+    localStorage.setItem(KEY,JSON.stringify(state));
+
+    updateWallet();
+    renderInventory();
+    renderHomeStats();
+    renderProfile();
+}
+
+function updateWallet(){
+
+    document.getElementById("coins").textContent=state.coins;
+    document.getElementById("gems").textContent=state.gems;
+    document.getElementById("level").textContent=state.level;
+}
+
+function renderHomeStats(){
+
+    document.getElementById("homeWins").textContent=state.wins;
+    document.getElementById("homeXP").textContent=state.xp;
+    document.getElementById("homeLuck").textContent=state.luck+"%";
+    document.getElementById("homeStreak").textContent=state.streak;
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+function show(id){
+
+    document.querySelectorAll("section").forEach(s=>{
+        s.classList.remove("active");
+    });
+
+    const el=document.getElementById(id);
+
+    if(el){
+        el.classList.add("active");
+    }
+
+    if(id==="shop") renderInventory();
+    if(id==="avatar") renderAvatars();
+    if(id==="leaderboard") renderLeaderboard();
+    if(id==="profile") renderProfile();
+}
+
+function home(){
+    clearGameTimers();
+    show("home");
+}
+
+function openModeSelect(){
+    show("mode");
+}
+
+
+/* =========================================================
+   START GAME
+   ========================================================= */
+
+function startGame(mode){
+
+    game={
+        mode:mode,
+        round:1,
+        score:0,
+        jackpot:500,
+        timer:10,
+        interval:null,
+        locked:false,
+        risk:"safe",
+        luckyType:"wheel",
+        sabotagesUsed:0,
+        incomingHits:0,
+        question:null,
+        wheelRotation:0,
+        aiTimer:null,
+        targetHits:0
+    };
+
+    state.ai.forEach(ai=>{
+        ai.score=0;
+        ai.hits=0;
+    });
+
+    show("game");
+
+    renderGamePlayers();
+
+    updateGameUI();
+
+    if(mode==="smart"){
+
+        document.getElementById("smartGame").style.display="block";
+        document.getElementById("luckyGame").style.display="none";
+
+        document.getElementById("gameModeTitle").textContent="🧠 SMART PATH";
+
+        loadQuestion();
+
+    }else{
+
+        document.getElementById("smartGame").style.display="none";
+        document.getElementById("luckyGame").style.display="block";
+
+        document.getElementById("gameModeTitle").textContent="🍀 LUCKY PATH";
+
+        renderLucky();
+
+        startAI();
+
+    }
+
+    playSound("start");
+
+}
+
+
+/* =========================================================
+   GAME UI
+   ========================================================= */
+
+function updateGameUI(){
+
+    document.getElementById("round").textContent=game.round;
+    document.getElementById("jackpot").textContent=game.jackpot;
+    document.getElementById("score").textContent=game.score;
+
+    document.getElementById("luckText").textContent=
+        "Luck "+state.luck+"%";
+
+    document.getElementById("progress").style.width=
+        ((game.round-1)/5*100)+"%";
+}
+
+function renderGamePlayers(){
+
+    const box=document.getElementById("players");
+
+    let html=`
+        <div class="player me">
+            <div class="hitBadge">
+                🛡️ ${game.incomingHits}/3
+            </div>
+            <div class="playerAvatar">${avatars[state.selectedAvatar][0]}</div>
+            <div class="playerName">YOU</div>
+            <div class="playerScore">🪙 ${game.score}</div>
+        </div>
+    `;
+
+    state.ai.forEach(ai=>{
+
+        html+=`
+            <div class="player">
+                <div class="hitBadge">
+                    💥 ${ai.hits}/3
+                </div>
+                <div class="playerAvatar">${ai.avatar}</div>
+                <div class="playerName">${ai.name}</div>
+                <div class="playerScore">🪙 ${ai.score}</div>
+            </div>
+        `;
+
+    });
+
+    box.innerHTML=html;
+}
+
+
+/* =========================================================
+   SMART PATH
+   ========================================================= */
+
+function loadQuestion(){
+
+    clearInterval(game.interval);
+
+    game.locked=false;
+    game.timer=10;
+
+    const q=
+        questions[Math.floor(Math.random()*questions.length)];
+
+    game.question=q;
+
+    document.getElementById("questionCategory").textContent=q.cat;
+    document.getElementById("question").textContent=q.q;
+
+    renderAnswers(q);
+
+    startTimer();
+
+    updateGameUI();
+}
+
+function renderAnswers(q){
+
+    const box=document.getElementById("answers");
+
+    box.innerHTML="";
+
+    q.a.forEach((answer,index)=>{
+
+        const btn=document.createElement("button");
+
+        btn.className="answer";
+        btn.textContent=answer;
+
+        btn.onclick=()=>{
+            answerQuestion(index,btn);
+        };
+
+        box.appendChild(btn);
+
+    });
+
+}
+
+function startTimer(){
+
+    document.getElementById("timer").textContent=game.timer;
+
+    game.interval=setInterval(()=>{
+
+        game.timer--;
+
+        document.getElementById("timer").textContent=
+            game.timer;
+
+        if(game.timer<=0){
+
+            clearInterval(game.interval);
+
+            if(!game.locked){
+                answerQuestion(-1,null);
+            }
+
+        }
+
+    },1000);
+
+}
+
+function answerQuestion(index,button){
+
+    if(game.locked) return;
+
+    game.locked=true;
+
+    clearInterval(game.interval);
+
+    const q=game.question;
+
+    const buttons=
+        document.querySelectorAll("#answers .answer");
+
+    buttons.forEach((b,i)=>{
+
+        if(i===q.c){
+            b.classList.add("correct");
+        }
+
+        b.disabled=true;
+
+    });
+
+    let correct=index===q.c;
+
+    if(button && !correct){
+        button.classList.add("wrong");
+    }
+
+    if(correct){
+
+        const speedBonus=game.timer*10;
+
+        const reward=150+speedBonus;
+
+        game.score+=reward;
+        game.jackpot+=100;
+
+        state.xp+=50;
+        state.luck=Math.min(100,state.luck+2);
+
+        toast("✅ Correct! +"+reward+" coins");
+
+        playSound("win");
+
+    }else{
+
+        state.xp+=10;
+        state.luck=Math.max(0,state.luck-2);
+
+        toast("❌ Salah / waktu habis");
+
+        playSound("lose");
+
+    }
+
+    updateGameUI();
+    renderGamePlayers();
+
+    aiSmartTurn(correct);
+
+    setTimeout(()=>{
+
+        if(game.round>=5){
+
+            finishGame();
+
+        }else{
+
+            game.round++;
+            loadQuestion();
+
+        }
+
+    },900);
+
+}
+
+
+/* =========================================================
+   AI
+   ========================================================= */
+
+function startAI(){
+
+    clearInterval(game.aiTimer);
+
+    game.aiTimer=setInterval(()=>{
+
+        if(game.round>5){
+            clearInterval(game.aiTimer);
+            return;
+        }
+
+        state.ai.forEach(ai=>{
+
+            const performance=.45+Math.random()*.45;
+
+            if(Math.random()<performance){
+
+                ai.score+=
+                    Math.floor((120+Math.random()*100)*riskMultiplier());
+
+            }else{
+
+                ai.score+=
+                    Math.floor(30+Math.random()*60);
+
+            }
+
+        });
+
+        if(Math.random()<.15){
+
+            aiSabotage();
+
+        }
+
+        renderGamePlayers();
+
+    },1800);
+
+}
+
+function aiSmartTurn(playerCorrect){
+
+    state.ai.forEach(ai=>{
+
+        const chance=.5+Math.random()*.4;
+
+        if(Math.random()<chance){
+
+            ai.score+=
+                Math.floor(100+Math.random()*100);
+
+        }else{
+
+            ai.score+=30;
+
+        }
+
+    });
+
+    renderGamePlayers();
+
+}
+
+function aiSabotage(){
+
+    const targetOptions=[
+        "you",
+        "you",
+        "ai"
+    ];
+
+    const target=
+        targetOptions[Math.floor(Math.random()*targetOptions.length)];
+
+    if(target==="you"){
+
+        if(game.incomingHits>=3) return;
+
+        game.incomingHits++;
+
+        applyIncomingSabotage();
+
+        toast("💥 AI melakukan sabotase!");
+
+    }else{
+
+        const candidates=
+            state.ai.filter(ai=>ai.hits<3);
+
+        if(!candidates.length) return;
+
+        const targetAI=
+            candidates[Math.floor(Math.random()*candidates.length)];
+
+        targetAI.hits++;
+
+        targetAI.score=Math.max(
+            0,
+            targetAI.score-50
+        );
+
+        toast("💥 "+targetAI.name+" terkena sabotase!");
+
+    }
+
+    renderGamePlayers();
+
+}
+
+
+/* =========================================================
+   LUCKY PATH
+   ========================================================= */
+
+function setRisk(risk,button){
+
+    game.risk=risk;
+
+    document.querySelectorAll(".riskBtn")
+        .forEach(b=>b.classList.remove("active"));
+
+    button.classList.add("active");
+
+    toast(
+        "Risk: "+
+        risk.toUpperCase()+
+        " ×"+
+        riskMultiplier()
+    );
+}
+
+function riskMultiplier(){
+
+    if(game.risk==="risk") return 2;
+    if(game.risk==="insane") return 5;
+
+    return 1;
+}
+
+function selectLucky(type,button){
+
+    game.luckyType=type;
+
+    document.querySelectorAll(".luckyGameBtn")
+        .forEach(b=>b.classList.remove("active"));
+
+    button.classList.add("active");
+
+    renderLucky();
+}
+
+function renderLucky(){
+
+    const stage=document.getElementById("luckyStage");
+
+    if(game.luckyType==="wheel"){
+
+        stage.innerHTML=`
+
+            <div style="text-align:center">
+
+                <div class="wheelWrap">
+
+                    <div class="pointer">▼</div>
+
+                    <div id="wheel"
+                         class="wheel">
+
+                        <div class="wheelCenter">
+                            🍀
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <button class="spinBtn"
+                        onclick="spinWheel()">
+                    🎡 SPIN WHEEL
+                </button>
+
+            </div>
+        `;
+
+    }
+
+    if(game.luckyType==="slots"){
+
+        stage.innerHTML=`
+
+            <div style="text-align:center">
+
+                <div class="slots">
+
+                    <div class="reel" id="r1">❔</div>
+                    <div class="reel" id="r2">❔</div>
+                    <div class="reel" id="r3">❔</div>
+
+                </div>
+
+                <button class="spinBtn"
+                        onclick="spinSlots()">
+                    🎰 SPIN
+                </button>
+
+            </div>
+        `;
+
+    }
+
+    if(game.luckyType==="box"){
+
+        stage.innerHTML=`
+
+            <div style="text-align:center">
+
+                <h3 style="margin-bottom:20px">
+                    🎁 Choose One Mystery Box
+                </h3>
+
+                <div class="boxGrid">
+
+                    ${[0,1,2,3,4,5].map(i=>`
+
+                        <button class="mysteryBox"
+                                onclick="openMystery(${i},this)">
+                            🎁
+                        </button>
+
+                    `).join("")}
+
+                </div>
+
+            </div>
+        `;
+
+    }
+
+    if(game.luckyType==="cards"){
+
+        stage.innerHTML=`
+
+            <div style="text-align:center">
+
+                <h3 style="margin-bottom:20px">
+                    🃏 Pick One Card
+                </h3>
+
+                <div class="cards">
+
+                    ${[0,1,2,3].map(i=>`
+
+                        <div class="luckyCard"
+                             onclick="pickCard(${i},this)">
+
+                            <div class="cardInner">
+
+                                <div class="cardFront">
+                                    🃏
+                                </div>
+
+                                <div class="cardBack"
+                                     id="cardBack${i}">
+                                    ?
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    `).join("")}
+
+                </div>
+
+            </div>
+        `;
+
+    }
+
+    if(game.luckyType==="coin"){
+
+        stage.innerHTML=`
+
+            <div style="text-align:center">
+
+                <div id="coin"
+                     class="coin">
+                    🪙
+                </div>
+
+                <h3 style="margin:18px 0">
+                    Heads or Tails?
+                </h3>
+
+                <div class="actionBar">
+
+                    <button class="spinBtn"
+                            onclick="flipCoin('HEADS')">
+                        HEADS
+                    </button>
+
+                    <button class="spinBtn"
+                            onclick="flipCoin('TAILS')">
+                        TAILS
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    }
+
+    if(game.luckyType==="target"){
+
+        stage.innerHTML=`
+
+            <div style="text-align:center">
+
+                <h3 style="margin-bottom:12px">
+                    🎯 HIT THE TARGET!
+                </h3>
+
+                <div id="targetArea"
+                     class="targetArea">
+                </div>
+
+                <p style="margin-top:10px;color:var(--muted)">
+                    Klik target sebelum berpindah.
+                </p>
+
+            </div>
+        `;
+
+        spawnTarget();
+
+    }
+
+}
+
+
+/* =========================================================
+   WHEEL
+   ========================================================= */
+
+function spinWheel(){
+
+    if(game.locked) return;
+
+    game.locked=true;
+
+    const wheel=document.getElementById("wheel");
+
+    const index=Math.floor(Math.random()*8);
+
+    game.wheelRotation+=
+        1440+
+        (index*45);
+
+    wheel.style.transform=
+        `rotate(${game.wheelRotation}deg)`;
+
+    playSound("spin");
+
+    setTimeout(()=>{
+
+        const prizes=[
+            50,
+            100,
+            200,
+            0,
+            500,
+            0,
+            150,
+            0
+        ];
+
+        const prize=prizes[index];
+
+        if(prize>0){
+
+            const amount=
+                prize*riskMultiplier();
+
+            game.score+=amount;
+            state.xp+=35;
+
+            toast("🎡 +"+amount+" coins!");
+
+        }else{
+
+            toast("💨 MISS!");
+
+            state.luck=
+                Math.max(0,state.luck-1);
+
+        }
+
+        finishLuckyRound();
+
+    },3600);
+
+}
+
+
+/* =========================================================
+   SLOTS
+   ========================================================= */
+
+function spinSlots(){
+
+    if(game.locked) return;
+
+    game.locked=true;
+
+    const reels=[
+        document.getElementById("r1"),
+        document.getElementById("r2"),
+        document.getElementById("r3")
+    ];
+
+    let count=0;
+
+    const interval=setInterval(()=>{
+
+        reels.forEach(r=>{
+            r.textContent=
+                luckySymbols[
+                    Math.floor(Math.random()*luckySymbols.length)
+                ];
+        });
+
+        count++;
+
+        if(count>18){
+
+            clearInterval(interval);
+
+            const result=[
+                luckySymbols[Math.floor(Math.random()*luckySymbols.length)],
+                luckySymbols[Math.floor(Math.random()*luckySymbols.length)],
+                luckySymbols[Math.floor(Math.random()*luckySymbols.length)]
+            ];
+
+            reels.forEach((r,i)=>{
+                r.textContent=result[i];
+            });
+
+            evaluateSlots(result);
+
+        }
+
+    },100);
+
+    playSound("spin");
+
+}
+
+function evaluateSlots(result){
+
+    let reward=50;
+
+    if(
+        result[0]===result[1] &&
+        result[1]===result[2]
+    ){
+
+        reward=500;
+        state.luck=Math.min(100,state.luck+10);
+
+        toast("🔥 JACKPOT! +"+reward*riskMultiplier());
+
+        game.jackpot+=300;
+
+    }else if(
+        result[0]===result[1] ||
+        result[1]===result[2] ||
+        result[0]===result[2]
+    ){
+
+        reward=200;
+
+        toast("⭐ DOUBLE MATCH!");
+
+    }else{
+
+        toast("🪙 Small reward");
+
+    }
+
+    reward*=riskMultiplier();
+
+    game.score+=reward;
+    state.xp+=30;
+
+    finishLuckyRound();
+
+}
+
+
+/* =========================================================
+   MYSTERY BOX
+   ========================================================= */
+
+function openMystery(index,button){
+
+    if(game.locked) return;
+
+    game.locked=true;
+
+    const rewards=[
+        50,
+        100,
+        200,
+        500,
+        20,
+        0
+    ];
+
+    const reward=
+        rewards[Math.floor(Math.random()*rewards.length)];
+
+    button.textContent=
+        reward===0 ? "💨" : "🪙";
+
+    let amount=reward*riskMultiplier();
+
+    if(reward===20){
+
+        state.gems+=
+            game.risk==="insane" ? 5 :
+            game.risk==="risk" ? 3 : 1;
+
+        toast("💎 GEM BONUS!");
+
+    }else if(reward===0){
+
+        toast("😱 EMPTY BOX!");
+
+    }else{
+
+        game.score+=amount;
+
+        toast("🎁 +"+amount+" coins!");
+
+    }
+
+    state.xp+=25;
+
+    finishLuckyRound();
+
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+function pickCard(index,element){
+
+    if(game.locked) return;
+
+    game.locked=true;
+
+    const values=[
+        50,
+        100,
+        250,
+        500
+    ];
+
+    const value=
+        values[Math.floor(Math.random()*values.length)];
+
+    const back=
+        document.getElementById("cardBack"+index);
+
+    back.textContent=
+        value===500 ? "🔥" : "🪙";
+
+    element.classList.add("flipped");
+
+    const amount=value*riskMultiplier();
+
+    game.score+=amount;
+    state.xp+=30;
+
+    setTimeout(()=>{
+
+        toast("🃏 Card: +"+amount);
+
+        finishLuckyRound();
+
+    },700);
+
+}
+
+
+/* =========================================================
+   COIN FLIP
+   ========================================================= */
+
+function flipCoin(choice){
+
+    if(game.locked) return;
+
+    game.locked=true;
+
+    const coin=document.getElementById("coin");
+
+    const result=
+        Math.random()<.5 ? "HEADS" : "TAILS";
+
+    coin.style.transform=
+        "rotateY(1080deg)";
+
+    playSound("spin");
+
+    setTimeout(()=>{
+
+        coin.style.transform="rotateY(0deg)";
+
+        if(choice===result){
+
+            const amount=
+                250*riskMultiplier();
+
+            game.score+=amount;
+            state.xp+=40;
+            state.luck=Math.min(100,state.luck+3);
+
+            toast("🪙 YOU WIN +"+amount);
+
+            playSound("win");
+
+        }else{
+
+            toast("🪙 "+result+" — YOU LOSE");
+
+            state.luck=
+                Math.max(0,state.luck-2);
+
+            playSound("lose");
+
+        }
+
+        finishLuckyRound();
+
+    },1100);
+
+}
+
+
+/* =========================================================
+   TARGET
+   ========================================================= */
+
+function spawnTarget(){
+
+    const area=document.getElementById("targetArea");
+
+    if(!area) return;
+
+    const target=document.createElement("button");
+
+    target.className="target";
+
+    target.style.left=
+        Math.random()*(area.clientWidth-70)+"px";
+
+    target.style.top=
+        Math.random()*(area.clientHeight-70)+"px";
+
+    target.onclick=()=>{
+
+        if(game.locked) return;
+
+        game.locked=true;
+
+        const amount=
+            180*riskMultiplier();
+
+        game.score+=amount;
+
+        state.xp+=35;
+        state.luck=Math.min(100,state.luck+2);
+
+        toast("🎯 HIT! +"+amount);
+
+        finishLuckyRound();
+
+    };
+
+    area.innerHTML="";
+    area.appendChild(target);
+
+    setTimeout(()=>{
+
+        if(!game.locked){
+
+            game.locked=true;
+
+            toast("🎯 Target escaped!");
+
+            finishLuckyRound();
+
+        }
+
+    },2200);
+
+}
+
+
+/* =========================================================
+   LUCKY ROUND
+   ========================================================= */
+
+function finishLuckyRound(){
+
+    updateGameUI();
+    renderGamePlayers();
+
+    setTimeout(()=>{
+
+        if(game.round>=5){
+
+            finishGame();
+
+        }else{
+
+            game.round++;
+            game.locked=false;
+
+            updateGameUI();
+
+            renderLucky();
+
+        }
+
+    },850);
+
+}
+
+
+/* =========================================================
+   SABOTAGE
+   ========================================================= */
+
+function openSabotage(){
+
+    if(game.mode==="smart" && game.locked){
+
+        toast("Tunggu sampai soal berikutnya.");
+
+    }
+
+    const modal=document.getElementById("overlay");
+    const title=document.getElementById("modalTitle");
+    const text=document.getElementById("modalText");
+    const content=document.getElementById("modalContent");
+
+    title.textContent="🧨 SABOTAGE";
+
+    text.textContent=
+        "Pilih item dan target. Setiap pemain maksimal terkena 3 sabotase per pertandingan.";
+
+    let html="";
+
+    const items=[
+        ["confuse","🌀","CONFUSE"],
+        ["time","⏱️","TIME ATTACK"],
+        ["shuffle","🔀","SHUFFLE"],
+        ["glitch","📺","SCREEN GLITCH"]
+    ];
+
+    items.forEach(item=>{
+
+        const count=state.inventory[item[0]]||0;
+
+        html+=`
+            <div style="
+                margin-top:10px;
+                padding:10px;
+                border:1px solid var(--line);
+                border-radius:12px;
+                background:#061525
+            ">
+
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center
+                ">
+
+                    <span>
+                        ${item[1]}
+                        <b>${item[2]}</b>
+                        <small style="color:var(--muted)">
+                            ×${count}
+                        </small>
+                    </span>
+
+                    <button
+                        class="actionBtn danger"
+                        ${count<=0?"disabled":""}
+                        onclick="chooseSabotageTarget('${item[0]}')">
+                        USE
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    });
+
+    content.innerHTML=html;
+
+    document.getElementById("modalConfirm").style.display="none";
+
+    modal.classList.add("show");
+
+}
+
+function chooseSabotageTarget(item){
+
+    if(!state.inventory[item] || state.inventory[item]<=0){
+
+        toast("Item habis.");
+
+        return;
+
+    }
+
+    let html=`
+
+        <div class="sabotageTargets">
+
+    `;
+
+    state.ai.forEach((ai,index)=>{
+
+        if(ai.hits>=3){
+
+            html+=`
+                <button class="targetPlayer" disabled>
+                    ${ai.avatar}
+                    ${ai.name}
+                    <span style="margin-left:auto;color:var(--red)">
+                        MAX 3/3
+                    </span>
+                </button>
+            `;
+
+        }else{
+
+            html+=`
+                <button class="targetPlayer"
+                        onclick="executeSabotage('${item}',${index})">
+                    ${ai.avatar}
+                    ${ai.name}
+                    <span style="margin-left:auto">
+                        💥 ${ai.hits}/3
+                    </span>
+                </button>
+            `;
+
+        }
+
+    });
+
+    html+=`</div>`;
+
+    document.getElementById("modalTitle").textContent=
+        "🎯 SELECT TARGET";
+
+    document.getElementById("modalText").textContent=
+        "Pilih lawan yang ingin kamu sabotase.";
+
+    document.getElementById("modalContent").innerHTML=html;
+
+}
+
+function executeSabotage(item,targetIndex){
+
+    const target=state.ai[targetIndex];
+
+    if(!target || target.hits>=3){
+
+        toast("Target sudah mencapai batas sabotase.");
+
+        return;
+
+    }
+
+    if(!state.inventory[item]){
+
+        toast("Item tidak tersedia.");
+
+        return;
+
+    }
+
+    state.inventory[item]--;
+
+    target.hits++;
+
+    state.totalSabotage++;
+
+    const effects={
+        confuse:80,
+        time:120,
+        shuffle:70,
+        glitch:100
+    };
+
+    target.score=Math.max(
+        0,
+        target.score-effects[item]
+    );
+
+    closeModal();
+
+    playSound("sabotage");
+
+    toast(
+        "💥 "+target.name+
+        " terkena "+item.toUpperCase()+
+        "!"
+    );
+
+    renderGamePlayers();
+    renderInventory();
+    saveState();
+
+}
+
+function applyIncomingSabotage(){
+
+    const gamePanel=document.querySelector(".gamePanel");
+
+    if(!gamePanel) return;
+
+    gamePanel.classList.add("shake");
+
+    setTimeout(()=>{
+        gamePanel.classList.remove("shake");
+    },500);
+
+    if(game.mode==="smart"){
+
+        if(game.timer>3){
+
+            game.timer=Math.max(1,game.timer-2);
+
+        }
+
+    }
+
+    if(Math.random()<.5){
+
+        document.body.classList.add("glitch");
+
+        setTimeout(()=>{
+            document.body.classList.remove("glitch");
+        },900);
+
+    }
+
+}
+
+
+/* =========================================================
+   BUY ITEMS
+   ========================================================= */
+
+function buyItem(item,cost){
+
+    if(state.gems<cost){
+
+        toast("💎 Gem tidak cukup.");
+
+        return;
+
+    }
+
+    state.gems-=cost;
+
+    state.inventory[item]=
+        (state.inventory[item]||0)+1;
+
+    saveState();
+
+    toast("🛒 Item berhasil dibeli!");
+
+}
+
+function renderInventory(){
+
+    const box=document.getElementById("inventory");
+
+    if(!box) return;
+
+    const data=[
+        ["🌀","CONFUSE","confuse"],
+        ["⏱️","TIME ATTACK","time"],
+        ["🔀","SHUFFLE","shuffle"],
+        ["📺","GLITCH","glitch"]
+    ];
+
+    box.innerHTML=data.map(x=>`
+
+        <div class="inventoryItem">
+
+            ${x[0]} ${x[1]}
+
+            <strong>
+                ×${state.inventory[x[2]]||0}
+            </strong>
+
+        </div>
+
+    `).join("");
+
+}
+
+
+/* =========================================================
+   TAUNT
+   ========================================================= */
+
+function sendTaunt(){
+
+    const text=
+        taunts[Math.floor(Math.random()*taunts.length)];
+
+    toast(text);
+
+    playSound("taunt");
+
+}
+
+
+/* =========================================================
+   FINISH
+   ========================================================= */
+
+function finishGame(){
+
+    clearGameTimers();
+
+    const aiScores=state.ai.map(ai=>({
+        name:ai.name,
+        avatar:ai.avatar,
+        score:ai.score
+    }));
+
+    const all=[
+        {
+            name:"YOU",
+            avatar:avatars[state.selectedAvatar][0],
+            score:game.score
+        },
+        ...aiScores
+    ];
+
+    all.sort((a,b)=>b.score-a.score);
+
+    const position=
+        all.findIndex(x=>x.name==="YOU")+1;
+
+    const win=position===1;
+
+    let rewardCoins;
+    let rewardGems;
+    let rewardXP=100;
+
+    if(win){
+
+        rewardCoins=300+game.score;
+
+        rewardGems=5;
+
+        state.wins++;
+        state.streak++;
+
+        state.luck=
+            Math.min(100,state.luck+5);
+
+        launchConfetti();
+
+        playSound("win");
+
+    }else{
+
+        rewardCoins=100+Math.floor(game.score*.3);
+
+        rewardGems=1;
+
+        state.losses++;
+        state.streak=0;
+
+        state.luck=
+            Math.max(0,state.luck-3);
+
+        playSound("lose");
+
+    }
+
+    state.coins+=rewardCoins;
+    state.gems+=rewardGems;
+    state.xp+=rewardXP;
+
+    if(game.score>state.bestScore){
+
+        state.bestScore=game.score;
+
+    }
+
+    checkLevelUp();
+
+    saveState();
+
+    showResult(
+        win,
+        position,
+        rewardCoins,
+        rewardGems,
+        rewardXP,
+        all
+    );
+
+}
+
+function showResult(
+    win,
+    position,
+    rewardCoins,
+    rewardGems,
+    rewardXP,
+    all
+){
+
+    show("result");
+
+    document.getElementById("resultTrophy").textContent=
+        win ? "🏆" : "🎮";
+
+    document.getElementById("resultTitle").textContent=
+        win ? "YOU WIN!" : "GOOD GAME!";
+
+    document.getElementById("resultText").textContent=
+        win
+        ? "Kamu berhasil mengalahkan semua lawan!"
+        : "Kamu finish di posisi #"+position+". Coba lagi!";
+
+    document.getElementById("rewardCoins").textContent=
+        "+"+rewardCoins;
+
+    document.getElementById("rewardGems").textContent=
+        "+"+rewardGems;
+
+    document.getElementById("rewardXP").textContent=
+        "+"+rewardXP;
+
+    const box=
+        document.getElementById("resultLeaderboard");
+
+    box.innerHTML=`
+
+        <div style="
+            max-width:600px;
+            margin:15px auto;
+            text-align:left
+        ">
+
+            ${all.map((p,i)=>`
+
+                <div class="leader ${i===0?"rank1":""}">
+
+                    <div class="rank">
+                        ${i===0?"🥇":
+                          i===1?"🥈":
+                          i===2?"🥉":
+                          "🏅"}
+                    </div>
+
+                    <div>
+                        <b>
+                            ${p.avatar} ${p.name}
+                        </b>
+                    </div>
+
+                    <strong>
+                        🪙 ${p.score}
+                    </strong>
+
+                </div>
+
+            `).join("")}
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   LEVEL
+   ========================================================= */
+
+function checkLevelUp(){
+
+    let needed=
+        state.level*250;
+
+    while(state.xp>=needed){
+
+        state.xp-=needed;
+
+        state.level++;
+
+        state.gems+=5;
+
+        toast(
+            "🎉 LEVEL UP! Level "+
+            state.level
+        );
+
+        needed=
+            state.level*250;
+
+    }
+
+}
+
+
+/* =========================================================
+   AVATAR
+   ========================================================= */
+
+function renderAvatars(){
+
+    const box=
+        document.getElementById("avatarGrid");
+
+    box.innerHTML=
+        avatars.map((a,i)=>`
+
+            <button
+                class="avatar ${
+                    i===state.selectedAvatar?"selected":""
+                }"
+                onclick="selectAvatar(${i})">
+
+                <span>${a[0]}</span>
+
+                <b>${a[1]}</b>
+
+            </button>
+
+        `).join("");
+
+}
+
+function selectAvatar(index){
+
+    state.selectedAvatar=index;
+
+    saveState();
+
+    renderAvatars();
+
+    toast(
+        "Avatar dipilih: "+
+        avatars[index][1]
+    );
+
+}
+
+
+/* =========================================================
+   LEADERBOARD
+   ========================================================= */
+
+function renderLeaderboard(){
+
+    const fake=[
+
+        ["🥇","LUCK MASTER","🧙",9850],
+        ["🥈","SMART FOX","🦊",9230],
+        ["🥉","CYBER KING","🤖",8870],
+        ["🏅","PANDA PRO","🐼",8250],
+        ["🏅","LUCKY ACE","😎",7990]
+
+    ];
+
+    const user=[
+        "🏅",
+        "YOU",
+        avatars[state.selectedAvatar][0],
+        state.bestScore
+    ];
+
+    const list=[...fake,user];
+
+    list.sort((a,b)=>b[3]-a[3]);
+
+    document.getElementById("leaderRows").innerHTML=
+        list.map((p,i)=>`
+
+            <div class="leader ${
+                p[1]==="YOU"?"rank1":""
+            }">
+
+                <div class="rank">
+                    ${i===0?"🥇":
+                      i===1?"🥈":
+                      i===2?"🥉":
+                      "🏅"}
+                </div>
+
+                <div>
+                    ${p[2]}
+                    <b>${p[1]}</b>
+                </div>
+
+                <strong>
+                    ${p[3]}
+                </strong>
+
+            </div>
+
+        `).join("");
+
+}
+
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+
+function renderProfile(){
+
+    const el=id=>document.getElementById(id);
+
+    if(!el("profileLevel")) return;
+
+    el("profileLevel").textContent=state.level;
+    el("profileWins").textContent=state.wins;
+    el("profileXP").textContent=state.xp;
+    el("profileBest").textContent=state.bestScore;
+
+    el("profileAvatar").textContent=
+        avatars[state.selectedAvatar][0]+" "+
+        avatars[state.selectedAvatar][1];
+
+    el("profileLuck").textContent=
+        state.luck+"%";
+
+    el("profileSabotage").textContent=
+        state.totalSabotage;
+
+}
+
+
+/* =========================================================
+   DAILY REWARD
+   ========================================================= */
+
+function dailyReward(){
+
+    const today=
+        new Date().toISOString().slice(0,10);
+
+    if(state.dailyDate===today){
+
+        toast("🎁 Daily Reward sudah diambil hari ini.");
+
+        return;
+
+    }
+
+    state.dailyDate=today;
+
+    state.coins+=100;
+    state.gems+=3;
+
+    saveState();
+
+    toast("🎁 +100 coins +3 gems!");
+
+    playSound("reward");
+
+}
+
+
+/* =========================================================
+   SOUND
+   ========================================================= */
+
+let audioCtx=null;
+
+function soundContext(){
+
+    if(!audioCtx){
+
+        audioCtx=
+            new (window.AudioContext||
+                 window.webkitAudioContext)();
+
+    }
+
+    return audioCtx;
+}
+
+function beep(freq,duration,type="sine"){
+
+    if(!state.sound) return;
+
+    try{
+
+        const ctx=soundContext();
+
+        const osc=ctx.createOscillator();
+        const gain=ctx.createGain();
+
+        osc.type=type;
+        osc.frequency.value=freq;
+
+        gain.gain.setValueAtTime(
+            .0001,
+            ctx.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            .08,
+            ctx.currentTime+.01
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            .0001,
+            ctx.currentTime+duration
+        );
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime+duration);
+
+    }catch(e){}
+
+}
+
+function playSound(type){
+
+    if(!state.sound) return;
+
+    if(type==="start"){
+        beep(300,.1);
+        setTimeout(()=>beep(500,.15),100);
+    }
+
+    if(type==="win"){
+        beep(600,.1);
+        setTimeout(()=>beep(800,.15),100);
+        setTimeout(()=>beep(1000,.2),200);
+    }
+
+    if(type==="lose"){
+        beep(300,.18,"sawtooth");
+        setTimeout(()=>beep(200,.25,"sawtooth"),150);
+    }
+
+    if(type==="spin"){
+        beep(450,.05);
+    }
+
+    if(type==="sabotage"){
+        beep(120,.12,"square");
+        setTimeout(()=>beep(80,.2,"square"),100);
+    }
+
+    if(type==="taunt"){
+        beep(700,.07);
+    }
+
+    if(type==="reward"){
+        beep(700,.1);
+        setTimeout(()=>beep(1000,.15),100);
+    }
+
+}
+
+function toggleSound(){
+
+    state.sound=!state.sound;
+
+    const sw=
+        document.getElementById("soundSwitch");
+
+    sw.classList.toggle("on",state.sound);
+
+    saveState();
+
+    toast(
+        state.sound
+        ? "🔊 Sound ON"
+        : "🔇 Sound OFF"
+    );
+
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+function closeModal(){
+
+    document
+        .getElementById("overlay")
+        .classList.remove("show");
+
+    document.getElementById("modalConfirm")
+        .style.display="block";
+
+}
+
+function showRules(){
+
+    const overlay=document.getElementById("overlay");
+
+    document.getElementById("modalTitle").textContent=
+        "❓ HOW TO PLAY";
+
+    document.getElementById("modalText").innerHTML=`
+
+        <b>SMART PATH</b><br>
+        Jawab 5 pertanyaan secepat mungkin.
+        Jawaban benar memberikan coin dan XP.<br><br>
+
+        <b>LUCKY PATH</b><br>
+        Pilih permainan keberuntungan:
+        Wheel, Slots, Mystery Box, Cards,
+        Coin Flip atau Target.<br><br>
+
+        <b>RISK</b><br>
+        SAFE ×1, RISK ×2 atau INSANE ×5.
+        Risiko lebih tinggi memberikan reward
+        lebih besar.<br><br>
+
+        <b>SABOTAGE</b><br>
+        Gunakan item untuk mengganggu AI.
+        Setiap pemain maksimal terkena
+        3 sabotase dalam satu pertandingan.<br><br>
+
+        💡 Semua currency di game ini virtual.
+        Tidak ada taruhan uang asli.
+
+    `;
+
+    document.getElementById("modalContent").innerHTML="";
+
+    document.getElementById("modalConfirm")
+        .onclick=closeModal;
+
+    overlay.classList.add("show");
+
+}
+
+
+/* =========================================================
+   EXIT
+   ========================================================= */
+
+function confirmExit(){
+
+    document.getElementById("modalTitle").textContent=
+        "🚪 EXIT GAME";
+
+    document.getElementById("modalText").textContent=
+        "Keluar dari pertandingan sekarang? Progress ronde ini akan hilang.";
+
+    document.getElementById("modalContent").innerHTML="";
+
+    const btn=
+        document.getElementById("modalConfirm");
+
+    btn.style.display="block";
+
+    btn.textContent="EXIT";
+
+    btn.onclick=()=>{
+
+        closeModal();
+        home();
+
+    };
+
+    document.getElementById("overlay")
+        .classList.add("show");
+
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+function resetData(){
+
+    if(!confirm(
+        "Reset semua data Brilliance or Blessed?"
+    )) return;
+
+    localStorage.removeItem(KEY);
+
+    location.reload();
+
+}
+
+
+/* =========================================================
+   TIMERS
+   ========================================================= */
+
+function clearGameTimers(){
+
+    clearInterval(game.interval);
+    clearInterval(game.aiTimer);
+
+}
+
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+let toastTimer;
+
+function toast(message){
+
+    const el=
+        document.getElementById("toast");
+
+    el.textContent=message;
+
+    el.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer=setTimeout(()=>{
+
+        el.classList.remove("show");
+
+    },2200);
+
+}
+
+
+/* =========================================================
+   CONFETTI
+   ========================================================= */
+
+function launchConfetti(){
+
+    for(let i=0;i<80;i++){
+
+        const c=document.createElement("div");
+
+        c.className="confetti";
+
+        c.style.left=
+            Math.random()*100+"vw";
+
+        c.style.animationDelay=
+            Math.random()*.8+"s";
+
+        c.style.background=
+            [
+                "#19d9ff",
+                "#ffd84d",
+                "#28e69a",
+                "#ff4d6d",
+                "#9b6cff"
+            ][Math.floor(Math.random()*5)];
+
+        document.body.appendChild(c);
+
+        setTimeout(()=>{
+            c.remove();
+        },3000);
+
+    }
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+function init(){
+
+    updateWallet();
+    renderHomeStats();
+    renderInventory();
+    renderProfile();
+    renderAvatars();
+
+    const sw=
+        document.getElementById("soundSwitch");
+
+    sw.classList.toggle("on",state.sound);
+
+}
+
+init();
+
+</script>
+
+</body>
+</html>
