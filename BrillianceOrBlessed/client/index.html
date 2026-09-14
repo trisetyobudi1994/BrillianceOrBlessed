@@ -3,29 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brilliance or Blessed - MLBB Level Arena</title>
+  <title>Brilliance or Blessed - Professional Esport Arena</title>
   <script src="/socket.io/socket.io.js"></script>
   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-YOUR_CLIENT_KEY"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
-    /* -------------------------------------------------- */
-    /* THEME SYSTEM & AAA GAMING STYLES (MLBB STYLE)      */
-    /* -------------------------------------------------- */
     :root[data-theme="dark"] {
-      --bg-main: #060913;
-      --bg-panel: rgba(15, 23, 42, 0.85);
+      --bg-main: #040711;
+      --bg-panel: rgba(11, 17, 32, 0.92);
       --border-glow: #00f0ff;
       --accent-gold: #ffb703;
       --accent-danger: #ff0055;
       --text-color: #f8fafc;
-      --card-gradient: linear-gradient(135deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95));
+      --card-gradient: linear-gradient(135deg, rgba(30,41,59,0.95), rgba(15,23,42,0.98));
     }
 
     :root[data-theme="light"] {
-      --bg-main: #e2e8f0;
-      --bg-panel: rgba(255, 255, 255, 0.9);
+      --bg-main: #cbd5e1;
+      --bg-panel: rgba(255, 255, 255, 0.95);
       --border-glow: #0284c7;
       --accent-gold: #d97706;
       --accent-danger: #dc2626;
@@ -34,263 +31,247 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; user-select: none; }
-    body { background: var(--bg-main); color: var(--text-color); display: flex; height: 100vh; overflow: hidden; background-image: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.05) 0%, transparent 80%); }
+    body { background: var(--bg-main); color: var(--text-color); height: 100vh; overflow: hidden; display: flex; flex-direction: column; background-image: radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.08) 0%, transparent 80%); }
 
-    /* LAYOUT UTAMA */
-    #sidebar {
-      width: 360px; background: var(--bg-panel); backdrop-filter: blur(12px);
-      padding: 24px; display: flex; flex-direction: column; gap: 18px;
-      border-right: 2px solid rgba(0, 240, 255, 0.3); box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-      z-index: 20;
+    h2, h3, h4 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; }
+    .neon-text { text-shadow: 0 0 12px var(--border-glow), 0 0 24px var(--border-glow); }
+    .gold-text { color: var(--accent-gold); text-shadow: 0 0 12px rgba(255, 183, 3, 0.6); }
+
+    /* PROFESSIONAL BUTTONS */
+    .btn-ml {
+      background: linear-gradient(90deg, #00f0ff, #0072ff);
+      color: #fff; border: none; padding: 14px 24px; font-weight: 700;
+      font-family: 'Orbitron', sans-serif; font-size: 14px; text-transform: uppercase;
+      border-radius: 8px; cursor: pointer; transition: 0.2s all;
+      box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+    }
+    .btn-ml:hover { transform: scale(1.03) translateY(-2px); filter: brightness(1.25); }
+    .btn-pay { background: linear-gradient(90deg, #ffb703, #ff8800); box-shadow: 0 4px 20px rgba(255, 183, 3, 0.4); }
+    .btn-sabotage { background: linear-gradient(90deg, #ff0055, #990033); box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); font-size: 10px; padding: 4px 8px; clip-path: none; border-radius: 4px; margin-left: 4px; }
+
+    /* TOAST NOTIFICATION CONTAINER */
+    #toast-container {
+      position: absolute; top: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      background: rgba(15, 23, 42, 0.95); border: 2px solid var(--border-glow); color: #fff;
+      padding: 10px 18px; border-radius: 8px; font-family: 'Orbitron'; font-size: 12px;
+      box-shadow: 0 0 15px rgba(0,240,255,0.4); animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* MAIN MENU PRO */
+    #main-menu {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg-main); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 100; gap: 20px; padding: 20px;
+    }
+    .menu-card {
+      background: var(--card-gradient); border: 2px solid var(--border-glow);
+      padding: 30px; border-radius: 20px; width: 100%; max-width: 440px;
+      box-shadow: 0 0 50px rgba(0, 240, 255, 0.25); text-align: center; display: flex; flex-direction: column; gap: 15px;
+    }
+    .menu-input {
+      width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-glow);
+      background: var(--bg-main); color: var(--text-color); font-size: 15px; font-family: 'Orbitron';
     }
 
+    /* GAMEPLAY WRAPPER */
+    #game-wrapper { display: none; width: 100%; height: 100vh; flex-direction: row; }
+    #sidebar {
+      width: 360px; background: var(--bg-panel); backdrop-filter: blur(14px);
+      padding: 20px; display: flex; flex-direction: column; gap: 14px;
+      border-right: 2px solid rgba(0, 240, 255, 0.3); box-shadow: 10px 0 30px rgba(0,0,0,0.6);
+      z-index: 20; overflow-y: auto;
+    }
     #game-container {
       flex: 1; position: relative; display: flex; flex-direction: column;
       align-items: center; justify-content: center; overflow: hidden;
     }
-
-    /* TYPOGRAPHY ESPORTS MODE */
-    h2, h3, h4 { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 1.5px; }
-    .neon-text { text-shadow: 0 0 10px var(--border-glow), 0 0 20px var(--border-glow); }
-    .gold-text { color: var(--accent-gold); text-shadow: 0 0 10px rgba(255, 183, 3, 0.5); }
-
-    /* BOARD CANVAS GLOW EFFECTS */
     #board-canvas {
       border-radius: 20px;
-      box-shadow: 0 0 50px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(0,0,0,0.8);
-      border: 2px solid rgba(0, 240, 255, 0.4);
+      box-shadow: 0 0 60px rgba(0, 240, 255, 0.25), inset 0 0 25px rgba(0,0,0,0.85);
+      border: 2px solid rgba(0, 240, 255, 0.5);
+      max-width: 100%; height: auto;
     }
 
-    /* BUTTONS ESPORTS STYLE */
-    .btn-ml {
-      background: linear-gradient(90deg, #00f0ff, #0072ff);
-      color: #fff; border: none; padding: 12px 20px; font-weight: 700;
-      font-family: 'Orbitron', sans-serif; font-size: 13px; text-transform: uppercase;
-      border-radius: 8px; cursor: pointer; transition: 0.2s all;
-      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4); clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
-    }
-    .btn-ml:hover { transform: scale(1.05) translateY(-2px); filter: brightness(1.2); }
-    .btn-pay { background: linear-gradient(90deg, #ffb703, #ff8800); box-shadow: 0 4px 15px rgba(255, 183, 3, 0.4); }
-    .btn-sabotage { background: linear-gradient(90deg, #ff0055, #990033); box-shadow: 0 4px 15px rgba(255, 0, 85, 0.4); font-size: 10px; padding: 4px 8px; clip-path: none; border-radius: 4px; margin-left: 4px; }
-
-    /* MODAL KUIS OVERLAY CLASS MLBB */
+    /* MODALS & OVERLAYS */
     .modal-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(4, 7, 18, 0.9); display: none; align-items: center; justify-content: center;
+      background: rgba(4, 7, 18, 0.88); display: none; align-items: center; justify-content: center;
       z-index: 200; backdrop-filter: blur(10px);
     }
     .quiz-card {
       background: var(--card-gradient); border: 2px solid var(--border-glow); border-radius: 20px;
-      padding: 30px; width: 440px; text-align: center; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4);
-      animation: popEsports 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      padding: 25px; width: 420px; text-align: center; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4);
     }
-    .quiz-img { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin: 15px 0; border: 2px solid var(--border-glow); box-shadow: 0 0 15px rgba(0,240,255,0.3); }
-    .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .quiz-img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin: 12px 0; border: 2px solid var(--border-glow); }
+    .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 
-    /* LUCKY WHEEL MODAL ESPORTS */
     #wheel-modal {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       background: var(--bg-panel); border: 3px solid var(--accent-gold); border-radius: 30px;
-      padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+      padding: 25px; flex-direction: column; align-items: center; gap: 15px;
       box-shadow: 0 0 80px rgba(255, 183, 3, 0.5); display: none; z-index: 100; backdrop-filter: blur(15px);
     }
-    .wheel-wrapper { position: relative; width: 280px; height: 280px; }
-    #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 1); filter: drop-shadow(0 0 15px rgba(255,183,3,0.6)); }
-    .pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 28px solid var(--accent-danger); z-index: 10; filter: drop-shadow(0 0 8px #ff0055); }
+    .wheel-wrapper { position: relative; width: 240px; height: 240px; }
+    #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0.99, 0.18, 1); }
+    .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-top: 24px solid var(--accent-danger); z-index: 10; }
 
-    /* EFEK SABOTASE OVERLAY (FREEZE ES MLBB) */
     #freeze-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.2) 0%, rgba(2, 132, 199, 0.6) 100%);
-      backdrop-filter: blur(6px) contrast(150%); display: none; pointer-events: none;
-      border: 8px solid #00f0ff; box-shadow: inset 0 0 80px #00f0ff; z-index: 180;
-      align-items: center; justify-content: center; flex-direction: column;
+      background: radial-gradient(circle, rgba(0, 240, 255, 0.25) 0%, rgba(2, 132, 199, 0.65) 100%);
+      backdrop-filter: blur(6px); display: none; pointer-events: none;
+      border: 6px solid #00f0ff; z-index: 180; align-items: center; justify-content: center; flex-direction: column;
     }
-
-    /* EMOTE & TAUNT BUBBLE FLASHING */
     .emote-bubble {
       position: absolute; background: linear-gradient(135deg, #ff0055, #ffb703);
-      color: #fff; padding: 10px 18px; border-radius: 30px; font-weight: 900;
-      font-family: 'Orbitron', sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(255,0,85,0.8);
-      animation: emotePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 160; pointer-events: none;
+      color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: 900;
+      font-family: 'Orbitron'; font-size: 14px; box-shadow: 0 0 20px rgba(255,0,85,0.8);
+      z-index: 160; pointer-events: none; animation: popUp 0.3s ease-out;
     }
+    @keyframes popUp { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-    @keyframes popEsports { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-    @keyframes emotePop { 0% { transform: scale(0) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+    @media (max-width: 768px) {
+      #game-wrapper { flex-direction: column; overflow-y: auto; }
+      #sidebar { width: 100%; max-height: 45vh; border-right: none; border-bottom: 2px solid rgba(0,240,255,0.3); }
+      #game-container { width: 100%; min-height: 55vh; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- SIDEBAR ESPORTS -->
-  <div id="sidebar">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 class="neon-text" style="font-size: 18px;">Brilliance</h2>
-      <button class="btn-ml" style="padding:6px 10px; font-size:10px;" onclick="toggleTheme()">DARK/LIGHT</button>
+  <!-- TOAST NOTIFICATIONS PRO -->
+  <div id="toast-container"></div>
+
+  <!-- 1. MAIN MENU PRO -->
+  <div id="main-menu">
+    <h1 class="neon-text" style="font-size: 36px; text-align: center;">BRILLIANCE OR BLESSED</h1>
+    <p style="font-size: 14px; opacity: 0.8; letter-spacing: 2px;">ESPORTS TACTICAL BOARD ARENA</p>
+    <div class="menu-card">
+      <h3 class="gold-text" style="font-size: 16px;">PLAYER CREDENTIALS</h3>
+      <input type="text" id="input-name" class="menu-input" placeholder="Nama Hero (Cth: Tigreal)">
+      <input type="text" id="input-phone" class="menu-input" placeholder="No. HP (Cth: 08123456)">
+      
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="btn-ml" style="flex:1;" onclick="startMode('solo')">SOLO TRAINING</button>
+        <button class="btn-ml btn-pay" style="flex:1;" onclick="startMode('multi')">RANKED MATCH</button>
+      </div>
     </div>
-
-    <!-- AUTH FORM -->
-    <div id="auth-panel" style="background: var(--card-gradient); padding: 15px; border-radius: 12px; border: 1px solid rgba(0, 240, 255, 0.2);">
-      <h4 style="font-size: 12px; margin-bottom: 8px;" class="gold-text">LOGIN ARENA (NO. HP)</h4>
-      <input type="text" id="user-phone" placeholder="08123456789" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-glow); background:var(--bg-main); color:var(--text-color); margin-bottom:10px;">
-      <button class="btn-ml" style="width: 100%;" onclick="loginWithPhone()">MASUK COMBAT</button>
-    </div>
-
-    <!-- TOPUP VA / QRIS REALTIME -->
-    <div style="background: var(--card-gradient); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 183, 3, 0.3);">
-      <h4 style="font-size: 12px; margin-bottom: 4px;" class="gold-text">VA BANK & QRIS REALTIME</h4>
-      <p style="font-size: 11px; opacity: 0.8; margin-bottom: 10px;">Top up instant masuk ke akun bank kamu.</p>
-      <button class="btn-ml btn-pay" style="width: 100%;" onclick="buyGold(10000, 5000)">DIAMOND PACK - RP 10.000</button>
-    </div>
-
-    <!-- PLAYER LIST -->
-    <h4 style="font-size: 14px; margin-top: 5px;">PLAYER ROSTER</h4>
-    <div id="player-list" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 180px;"></div>
-
-    <!-- EMOTE TAUNTS -->
-    <h4 style="font-size: 12px; margin-top: 5px;" class="gold-text">TAUNT EMOTES</h4>
-    <div style="display: flex; gap: 8px;">
-      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('🔥 SLAY!')">🔥</button>
-      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('🤡 NOOB!')">🤡</button>
-      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('💀 SAVAGE!')">💀</button>
-      <button class="btn-ml" style="clip-path:none; padding:8px 12px; font-size:18px;" onclick="sendTaunt('👑 KING!')">👑</button>
-    </div>
-
-    <div id="turn-indicator" class="neon-text" style="font-weight:bold; font-size:14px; margin-top:auto;">WAITING FOR ARENA...</div>
   </div>
 
-  <!-- GAME CONTAINER & CANVAS -->
-  <div id="game-container">
-    <canvas id="board-canvas" width="800" height="540"></canvas>
+  <!-- 2. GAMEPLAY UI CONTAINER -->
+  <div id="game-wrapper">
+    <div id="sidebar">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 class="neon-text" style="font-size: 16px;" id="player-title">HERO</h2>
+        <button class="btn-ml" style="padding:4px 8px; font-size:9px;" onclick="toggleTheme()">THEME</button>
+      </div>
 
-    <!-- OVERLAY LAYAR BEKU (SABOTASE FREEZE) -->
-    <div id="freeze-overlay">
-      <h1 class="neon-text" style="font-size: 48px; color: #00f0ff;">YOU ARE FROZEN!</h1>
-      <p style="font-size: 18px; margin-top: 10px;">Giliranmu dilewati oleh Sabotase Lawan!</p>
+      <div style="background: var(--card-gradient); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 183, 3, 0.3);">
+        <h4 style="font-size: 11px; margin-bottom: 4px;" class="gold-text">VA BANK & QRIS REALTIME</h4>
+        <button class="btn-ml btn-pay" style="width: 100%; padding: 8px; font-size: 11px;" onclick="buyGold(10000, 5000)">TOPUP DIAMOND - RP 10.000</button>
+      </div>
+
+      <h4 style="font-size: 12px; margin-top: 2px;">LIVE ROSTER & STATS</h4>
+      <div id="player-list" style="display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 140px;"></div>
+
+      <h4 style="font-size: 11px; margin-top: 2px;" class="gold-text">BATTLE EMOTES</h4>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn-ml" style="clip-path:none; padding:6px 10px; font-size:14px;" onclick="sendTaunt('🔥 SLAY!')">🔥</button>
+        <button class="btn-ml" style="clip-path:none; padding:6px 10px; font-size:14px;" onclick="sendTaunt('🤡 NOOB!')">🤡</button>
+        <button class="btn-ml" style="clip-path:none; padding:6px 10px; font-size:14px;" onclick="sendTaunt('💀 SAVAGE!')">💀</button>
+        <button class="btn-ml" style="clip-path:none; padding:6px 10px; font-size:14px;" onclick="sendTaunt('👑 KING!')">👑</button>
+      </div>
+
+      <div id="turn-indicator" class="neon-text" style="font-weight:bold; font-size:12px; margin-top:auto;">INITIALIZING ARENA...</div>
     </div>
 
-    <!-- MODAL KUIS OVERLAY (MLBB BANNER) -->
-    <div class="modal-overlay" id="quiz-modal">
-      <div class="quiz-card">
-        <h3 class="gold-text" style="font-size: 20px;">TRIVIA CHALLENGE!</h3>
-        <p style="font-size:13px; margin-top:5px;" id="quiz-question">Jawab cepat untuk bonus Gold Savage!</p>
-        <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400" id="quiz-img" class="quiz-img" alt="Quiz Gambar">
-        <div class="quiz-options" id="quiz-options-container">
-          <button class="btn-ml" onclick="answerQuiz(0)" id="opt-0">OPTION A</button>
-          <button class="btn-ml" onclick="answerQuiz(1)" id="opt-1">OPTION B</button>
-          <button class="btn-ml" onclick="answerQuiz(2)" id="opt-2">OPTION C</button>
-          <button class="btn-ml" onclick="answerQuiz(3)" id="opt-3">OPTION D</button>
+    <div id="game-container">
+      <canvas id="board-canvas" width="800" height="540"></canvas>
+
+      <div id="freeze-overlay">
+        <h1 class="neon-text" style="font-size: 44px; color: #00f0ff;">FROZEN!</h1>
+        <p style="font-size: 16px; margin-top: 5px;">Giliranmu ditahan oleh sabotase lawan!</p>
+      </div>
+
+      <div class="modal-overlay" id="quiz-modal">
+        <div class="quiz-card">
+          <h3 class="gold-text" style="font-size: 18px;">TRIVIA CHALLENGE!</h3>
+          <p style="font-size:12px; margin-top:4px;" id="quiz-question">Jawab cepat untuk bonus Diamond!</p>
+          <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400" id="quiz-img" class="quiz-img" alt="Quiz">
+          <div class="quiz-options" id="quiz-options-container">
+            <button class="btn-ml" onclick="answerQuiz(0)" id="opt-0">A</button>
+            <button class="btn-ml" onclick="answerQuiz(1)" id="opt-1">B</button>
+            <button class="btn-ml" onclick="answerQuiz(2)" id="opt-2">C</button>
+            <button class="btn-ml" onclick="answerQuiz(3)" id="opt-3">D</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- LUCKY WHEEL MODAL -->
-    <div id="wheel-modal">
-      <h3 class="gold-text" style="font-size: 22px;">LUCKY SPIN WHEEL</h3>
-      <div class="wheel-wrapper">
-        <div class="pointer"></div>
-        <canvas id="wheel-canvas" width="280" height="280"></canvas>
+      <div id="wheel-modal">
+        <h3 class="gold-text" style="font-size: 18px;">LUCKY SPIN WHEEL</h3>
+        <div class="wheel-wrapper">
+          <div class="pointer"></div>
+          <canvas id="wheel-canvas" width="240" height="240"></canvas>
+        </div>
+        <button class="btn-ml btn-pay" onclick="spinWheel()" style="font-size: 14px; padding: 10px 24px;">SPIN SEKARANG!</button>
       </div>
-      <button class="btn-ml btn-pay" id="btn-spin" onclick="spinWheel()" style="font-size: 16px; padding: 14px 30px;">SPIN SEKARANG!</button>
     </div>
   </div>
 
   <script>
     // ==========================================
-    // 2D CANVAS PARTICLE & VFX ENGINE (ESPORTS)
+    // PRO AUDIO SYNTHESIZER (BGM & SFX)
     // ==========================================
-    class VFXEngine {
-      constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.particles = [];
-        this.isCelebrating = false;
-        this.bannerScale = 0;
-      }
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let bgmInterval = null;
 
-      spawnVictoryBurst() {
-        this.isCelebrating = true;
-        this.bannerScale = 0;
-        const colors = ['#00f0ff', '#ffb703', '#ff0055', '#7000ff', '#ffffff'];
+    function playSFX(freq, type = 'sine', duration = 0.2) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
 
-        for (let i = 0; i < 150; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = Math.random() * 12 + 4;
-          this.particles.push({
-            x: this.canvas.width / 2,
-            y: this.canvas.height / 2,
-            vx: Math.cos(angle) * speed,
-            vy: Math.sin(angle) * speed - 3,
-            size: Math.random() * 8 + 4,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            rotation: Math.random() * 360,
-            vRot: (Math.random() - 0.5) * 10,
-            gravity: 0.15,
-            opacity: 1,
-            shape: Math.random() > 0.5 ? 'rect' : 'circle'
-          });
-        }
-      }
+    function startBGM() {
+      if (bgmInterval) return;
+      const notes = [220, 246.94, 277.18, 329.63, 369.99];
+      let index = 0;
+      bgmInterval = setInterval(() => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(notes[index % notes.length], audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+        index++;
+      }, 400);
+    }
 
-      updateAndRender() {
-        if (this.particles.length === 0 && !this.isCelebrating) return;
-
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-          const p = this.particles[i];
-          p.x += p.vx;
-          p.y += p.vy;
-          p.vy += p.gravity;
-          p.opacity -= 0.008;
-          p.rotation += p.vRot;
-
-          if (p.opacity <= 0) {
-            this.particles.splice(i, 1);
-            continue;
-          }
-
-          this.ctx.save();
-          this.ctx.globalAlpha = p.opacity;
-          this.ctx.translate(p.x, p.y);
-          this.ctx.rotate((p.rotation * Math.PI) / 180);
-          this.ctx.fillStyle = p.color;
-          this.ctx.shadowBlur = 10;
-          this.ctx.shadowColor = p.color;
-
-          if (p.shape === 'rect') {
-            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.5);
-          } else {
-            this.ctx.beginPath();
-            this.ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-            this.ctx.fill();
-          }
-
-          this.ctx.restore();
-        }
-
-        if (this.isCelebrating) {
-          if (this.bannerScale < 1) this.bannerScale += 0.05;
-
-          this.ctx.save();
-          this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
-          this.ctx.scale(this.bannerScale, this.bannerScale);
-
-          this.ctx.shadowBlur = 30;
-          this.ctx.shadowColor = '#ffb703';
-          this.ctx.fillStyle = '#ffb703';
-          this.ctx.font = '900 52px Orbitron';
-          this.ctx.textAlign = 'center';
-          this.ctx.fillText('VICTORY!', 0, 0);
-
-          this.ctx.shadowColor = '#00f0ff';
-          this.ctx.fillStyle = '#ffffff';
-          this.ctx.font = '700 20px Rajdhani';
-          this.ctx.fillText('WINNER WINNER HONORED HERO', 0, 40);
-          this.ctx.restore();
-        }
-      }
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerText = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
     }
 
     // ==========================================
-    // GAME CLIENT LOGIC & SOCKETS (DYNAMIC PRODUCTION ROUTING)
+    // SOCKET & GAME LOGIC
     // ==========================================
     const SOCKET_URL = window.location.hostname === 'localhost' 
       ? 'http://localhost:3000' 
@@ -299,41 +280,37 @@
     const socket = io(SOCKET_URL);
     let currentGameState = null;
     let currentUser = null;
-
     const boardCanvas = document.getElementById('board-canvas');
-    const vfx = new VFXEngine(boardCanvas);
-
-    // AUDIO SYNTHESIZER ESPORTS SFX
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSFX(freq, type = 'sine', duration = 0.2) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    }
 
     function toggleTheme() {
       const current = document.documentElement.getAttribute('data-theme');
       document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-      renderBoard();
     }
 
-    async function loginWithPhone() {
-      const phone = document.getElementById('user-phone').value;
-      if (!phone) return alert('Masukkan Nomor HP!');
-      currentUser = { phone, name: `Hero_${phone.slice(-4)}` };
-      socket.emit('join_room', { roomId: 'room_main', phone: phone, name: currentUser.name });
+    function startMode(mode) {
+      const name = document.getElementById('input-name').value.trim();
+      const phone = document.getElementById('input-phone').value.trim();
+
+      if (!name || !phone) {
+        alert('Mohon isi Nama Hero dan No. HP terlebih dahulu!');
+        return;
+      }
+
+      currentUser = { name, phone };
+      playSFX(880, 'sine', 0.4);
+      startBGM();
+
+      document.getElementById('main-menu').style.display = 'none';
+      document.getElementById('game-wrapper').style.display = 'flex';
+      document.getElementById('player-title').innerText = name;
+
+      const roomId = mode === 'solo' ? 'room_solo_' + socket.id : 'room_main';
+      socket.emit('join_room', { roomId, phone, name });
+      showToast(`Connected to Arena: ${name}`);
     }
 
     async function buyGold(amount, gold) {
-      if (!currentUser) return alert('Login dulu!');
+      if (!currentUser) return;
       const res = await fetch('/api/payment/charge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -342,7 +319,7 @@
       const data = await res.json();
       if (data.success) {
         snap.pay(data.token, {
-          onSuccess: function() { playSFX(1200, 'triangle', 0.5); alert('Topup Sukses!'); }
+          onSuccess: function() { playSFX(1200, 'triangle', 0.5); showToast('Topup Diamond Berhasil!'); }
         });
       }
     }
@@ -351,73 +328,65 @@
       const ctx = boardCanvas.getContext('2d');
       ctx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
 
-      // Gradient Background Canvas
       const bgGrad = ctx.createLinearGradient(0, 0, boardCanvas.width, boardCanvas.height);
       bgGrad.addColorStop(0, '#0a0e1a');
       bgGrad.addColorStop(1, '#020617');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, boardCanvas.width, boardCanvas.height);
 
-      // Render 30 Petak Board
       for (let i = 0; i < 30; i++) {
         const x = (i % 10) * 74 + 30;
         const y = Math.floor(i / 10) * 155 + 45;
 
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         if (i % 5 === 0 && i > 0) {
-          ctx.fillStyle = '#ffb703'; ctx.shadowColor = '#ffb703'; // Petak Kuis
+          ctx.fillStyle = '#ffb703'; ctx.shadowColor = '#ffb703';
         } else if (i % 7 === 0 && i > 0) {
-          ctx.fillStyle = '#ff0055'; ctx.shadowColor = '#ff0055'; // Petak Trap
+          ctx.fillStyle = '#ff0055'; ctx.shadowColor = '#ff0055';
         } else {
           ctx.fillStyle = i % 2 === 0 ? '#00f0ff' : '#7000ff';
           ctx.shadowColor = i % 2 === 0 ? '#00f0ff' : '#7000ff';
         }
 
         ctx.beginPath();
-        ctx.roundRect(x, y, 64, 58, 12);
+        ctx.roundRect(x, y, 64, 58, 10);
         ctx.fill();
 
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#ffffff';
-        ctx.font = '700 13px Orbitron';
+        ctx.font = '700 12px Orbitron';
         if (i % 5 === 0 && i > 0) ctx.fillText('❓ KUIS', x + 8, y + 34);
         else ctx.fillText(`${i + 1}`, x + 24, y + 34);
       }
 
-      // Render Avatar Player
       if (currentGameState?.players) {
         currentGameState.players.forEach((p, idx) => {
           const x = (p.position % 10) * 74 + 52 + (idx * 3);
           const y = Math.floor(p.position / 10) * 155 + 72;
 
           ctx.beginPath();
-          ctx.arc(x, y, 15, 0, Math.PI * 2);
+          ctx.arc(x, y, 14, 0, Math.PI * 2);
           ctx.fillStyle = ['#ff0055', '#ffb703', '#00f0ff', '#a855f7'][idx % 4];
           ctx.fill();
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 2;
           ctx.strokeStyle = '#ffffff';
           ctx.stroke();
         });
       }
-
-      // Overlay Partikel VFX Kemenangan
-      vfx.updateAndRender();
     }
 
-    // GAME LOOP (60 FPS)
     function gameLoop() {
       renderBoard();
       requestAnimationFrame(gameLoop);
     }
     requestAnimationFrame(gameLoop);
 
-    // TAUNT BUBBLE SYNC
     function sendTaunt(emote) {
+      playSFX(750, 'square', 0.15);
       socket.emit('send_taunt', { emoteId: emote });
     }
 
     socket.on('taunt_received', (data) => {
-      playSFX(900, 'square', 0.2);
       const container = document.getElementById('game-container');
       const bubble = document.createElement('div');
       bubble.className = 'emote-bubble';
@@ -425,60 +394,48 @@
       bubble.style.left = `${Math.random() * 50 + 25}%`;
       bubble.style.top = `${Math.random() * 50 + 20}%`;
       container.appendChild(bubble);
-
-      setTimeout(() => bubble.remove(), 2500);
+      setTimeout(() => bubble.remove(), 2200);
     });
 
-    // WHEEL SPIN ACTION
     function spinWheel() {
+      playSFX(500, 'sawtooth', 0.3);
       socket.emit('req_spin_wheel');
     }
 
     socket.on('wheel_spun', (data) => {
-      playSFX(600, 'sawtooth', 0.4);
       const wheelCanvas = document.getElementById('wheel-canvas');
       wheelCanvas.style.transform = `rotate(${1440 + (data.slotIndex * 60)}deg)`;
 
       setTimeout(() => {
-        playSFX(1000, 'triangle', 0.5);
+        playSFX(950, 'triangle', 0.4);
         wheelCanvas.style.transform = 'rotate(0deg)';
 
         if (data.triggerQuiz && data.quizPrompt) {
           document.getElementById('quiz-question').innerText = data.quizPrompt.question;
           document.getElementById('quiz-img').src = data.quizPrompt.imageUrl;
-          
           data.quizPrompt.options.forEach((optText, idx) => {
-            const btn = document.getElementById(`opt-${idx}`);
-            if (btn) btn.innerText = optText;
+            document.getElementById(`opt-${idx}`).innerText = optText;
           });
-          
           document.getElementById('quiz-modal').style.display = 'flex';
         }
       }, 4000);
     });
 
     function answerQuiz(optIndex) {
-      playSFX(1400, 'sine', 0.3);
+      playSFX(1200, 'sine', 0.3);
       socket.emit('submit_quiz_answer', { selectedIndex: optIndex });
       document.getElementById('quiz-modal').style.display = 'none';
     }
 
-    socket.on('quiz_result', (res) => {
-      alert(res.message);
-    });
+    socket.on('quiz_result', (res) => showToast(res.message));
 
     function triggerSabotage(targetId, itemId) {
       socket.emit('req_use_sabotage', { targetId, itemId });
     }
 
     socket.on('sabotage_executed', (data) => {
-      playSFX(400, 'sawtooth', 0.5);
-      alert(data.effectSummary);
-    });
-
-    socket.on('game_finished', (winnerData) => {
-      playSFX(1500, 'triangle', 0.8);
-      vfx.spawnVictoryBurst();
+      playSFX(300, 'sawtooth', 0.4);
+      showToast(data.effectSummary);
     });
 
     socket.on('room_state_update', (state) => {
@@ -500,16 +457,11 @@
 
       currentGameState.players.forEach(p => {
         const div = document.createElement('div');
-        div.style.cssText = "background: var(--card-gradient); padding:8px 12px; border-radius:8px; border:1px solid rgba(0,240,255,0.2); font-size:12px; display:flex; justify-content:space-between; align-items:center;";
+        div.style.cssText = "background: var(--card-gradient); padding:6px 10px; border-radius:6px; border:1px solid rgba(0,240,255,0.2); font-size:11px; display:flex; justify-content:space-between; align-items:center;";
         
         let sabotageBtns = '';
         if (p.id !== socket.id && currentGameState.currentTurn === socket.id) {
-          sabotageBtns = `
-            <span>
-              <button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'SWAP')">SWAP</button>
-              <button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'FREEZE')">ICE</button>
-            </span>
-          `;
+          sabotageBtns = `<span><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'SWAP')">SWAP</button><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'FREEZE')">ICE</button></span>`;
         }
 
         div.innerHTML = `<div><strong>${p.name}</strong><br>Pos: ${p.position} | 💎 ${p.gold}</div>${sabotageBtns}`;
@@ -522,36 +474,35 @@
       if (currentGameState.gameState === 'PLAYING') {
         if (currentGameState.currentTurn === socket.id) {
           modal.style.display = 'flex';
-          turnIndicator.innerText = `GILIRANMU! (${currentGameState.timeRemaining}s)`;
+          turnIndicator.innerText = `YOUR TURN! (${currentGameState.timeRemaining}s)`;
           turnIndicator.style.color = '#00f0ff';
         } else {
           modal.style.display = 'none';
           const currPlayer = currentGameState.players.find(p => p.id === currentGameState.currentTurn);
-          turnIndicator.innerText = `GILIRAN: ${currPlayer ? currPlayer.name : '...'} (${currentGameState.timeRemaining}s)`;
+          turnIndicator.innerText = `TURN: ${currPlayer ? currPlayer.name : '...'} (${currentGameState.timeRemaining}s)`;
           turnIndicator.style.color = '#ffb703';
         }
       }
     }
 
-    // DRAW WHEEL CANVAS 3D CYBER
     (function drawWheel() {
       const canvas = document.getElementById('wheel-canvas');
       const ctx = canvas.getContext('2d');
       const colors = ['#ffb703', '#ff0055', '#7000ff', '#00f0ff', '#475569', '#0072ff'];
-      const labels = ['2x MULTI', 'JACKPOT', 'SWAP', '+100 GOLD', 'ZONK', 'FREEZE'];
+      const labels = ['2x', 'JACKPOT', 'SWAP', '+100G', 'ZONK', 'FREEZE'];
 
       for (let i = 0; i < 6; i++) {
         ctx.beginPath();
-        ctx.moveTo(140, 140);
-        ctx.arc(140, 140, 140, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
+        ctx.moveTo(120, 120);
+        ctx.arc(120, 120, 120, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
         ctx.fillStyle = colors[i];
         ctx.fill();
         ctx.save();
-        ctx.translate(140, 140);
+        ctx.translate(120, 120);
         ctx.rotate((i * Math.PI) / 3 + Math.PI / 6);
         ctx.fillStyle = '#fff';
-        ctx.font = '700 12px Orbitron';
-        ctx.fillText(labels[i], 50, 5);
+        ctx.font = '700 11px Orbitron';
+        ctx.fillText(labels[i], 40, 4);
         ctx.restore();
       }
     })();
