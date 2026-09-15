@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Brilliance or Blessed - Professional Esport Arena</title>
   
-  <!-- Socket.io Client Library -->
-  <script src="/socket.io/socket.io.js"></script>
+  <!-- [PERBAIKAN 1]: Menggunakan CDN Socket.io agar bisa dibaca oleh Android Capacitor -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  
   <!-- Midtrans Client Library (Ganti SB-Mid-client-XXXXX dengan Client Key Anda) -->
   <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-DEMO_KEY"></script>
   
@@ -226,13 +227,23 @@
   <script>
     // ==========================================
     // PRO AUDIO SYNTHESIZER (BGM & SFX)
+    // [PERBAIKAN 2]: Inisialisasi AudioContext secara Lazy pada Gestur Pertama
     // ==========================================
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioCtx = null;
     let bgmInterval = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
 
     function playSFX(freq, type = 'sine', duration = 0.2) {
       try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        initAudio();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = type;
@@ -248,10 +259,12 @@
 
     function startBGM() {
       if (bgmInterval) return;
+      initAudio();
       const notes = [220, 246.94, 277.18, 329.63, 369.99];
       let index = 0;
       bgmInterval = setInterval(() => {
         try {
+          if (!audioCtx) return;
           if (audioCtx.state === 'suspended') audioCtx.resume();
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -278,13 +291,12 @@
     }
 
     // ==========================================
-    // SOCKET & GAME LOGIC PERBAIKAN
+    // SOCKET & GAME LOGIC
     // ==========================================
     const SOCKET_URL = window.location.origin.includes('http') && !window.location.origin.includes('file://')
       ? window.location.origin
       : 'https://brillianceorblessed-production.up.railway.app';
 
-    // Socket Option dengan Reconnection Otomatis
     const socket = (typeof io !== 'undefined') ? io(SOCKET_URL, {
       reconnection: true,
       reconnectionAttempts: 10,
@@ -301,6 +313,10 @@
     } else {
       socket.on('connect', () => {
         showToast("Terhubung ke Server Arena");
+        const turnInd = document.getElementById('turn-indicator');
+        if (turnInd && turnInd.innerText === "INITIALIZING ARENA...") {
+          turnInd.innerText = "SIAP BERTANDING";
+        }
       });
 
       socket.on('disconnect', () => {
@@ -318,6 +334,7 @@
     }
 
     function startMode(mode) {
+      initAudio();
       const name = document.getElementById('input-name').value.trim();
       const phone = document.getElementById('input-phone').value.trim();
 
@@ -334,7 +351,9 @@
       document.getElementById('game-wrapper').style.display = 'flex';
       document.getElementById('player-title').innerText = name;
 
-      const roomId = mode === 'solo' ? 'room_solo_' + (socket ? socket.id : Date.now()) : 'room_main';
+      // [PERBAIKAN 3]: Mencegah undefined jika socket.id belum ada
+      const socketId = (socket && socket.id) ? socket.id : 'user_' + Math.random().toString(36).substr(2, 9);
+      const roomId = mode === 'solo' ? 'room_solo_' + socketId : 'room_main';
       
       if (socket) {
         socket.emit('join_room', { roomId, phone, name, mode });
@@ -344,10 +363,11 @@
       showToast(`Entering Arena: ${name}`);
     }
 
+    // [PERBAIKAN 4]: URL payment diubah menggunakan absolute SOCKET_URL (bukan relative /api/payment/charge)
     async function buyGold(amount, gold) {
       if (!currentUser) return;
       try {
-        const res = await fetch('/api/payment/charge', {
+        const res = await fetch(`${SOCKET_URL}/api/payment/charge`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: currentUser.phone, amount, goldAmount: gold })
