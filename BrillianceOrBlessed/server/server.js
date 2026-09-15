@@ -21,23 +21,35 @@ app.use(express.static(path.join(__dirname, '../client')));
 // Data penyimpanan room & player di memory
 const rooms = {};
 
+// Helper untuk mendapatkan Room ID tempat player berada
+const getPlayerRoom = (socket) => {
+  return Array.from(socket.rooms).find(r => r !== socket.id);
+};
+
 // Handle Koneksi Socket.io
 io.on('connection', (socket) => {
   console.log(`[+] Player Terhubung: ${socket.id}`);
 
   // Fungsi untuk memasukkan player ke dalam room & memulai game
-  const handleJoin = (data) => {
-    const { roomId, name, phone, mode } = data;
+  const handleJoin = (data = {}) => {
+    const roomId = data.roomId || 'default-room';
+    const name = data.name || 'Hero';
+    const phone = data.phone || '-';
+    const mode = data.mode || 'classic';
+
     socket.join(roomId);
 
     if (!rooms[roomId]) {
       rooms[roomId] = {
         roomId: roomId,
+        arenaReady: true, // FIXED: Properti utama agar tampilan stuck INITIALIZING ARENA di client terbuka
         gameState: 'PLAYING',
         currentTurn: socket.id,
         timeRemaining: 30,
         players: []
       };
+    } else {
+      rooms[roomId].arenaReady = true;
     }
 
     // Cek jika player belum ada di daftar
@@ -45,8 +57,8 @@ io.on('connection', (socket) => {
     if (!existingPlayer) {
       rooms[roomId].players.push({
         id: socket.id,
-        name: name || 'Hero',
-        phone: phone || '-',
+        name: name,
+        phone: phone,
         position: 0,
         gold: 1000,
         isFrozen: false
@@ -57,6 +69,7 @@ io.on('connection', (socket) => {
 
     // Kirim pembaruan state arena ke semua pemain di room ini
     io.to(roomId).emit('room_state_update', rooms[roomId]);
+    io.to(roomId).emit('updateGameState', rooms[roomId]); // FIXED: Memastikan kompatibilitas jika client memakai listener ini
   };
 
   // 1. Tangkap event join dari client
@@ -65,6 +78,7 @@ io.on('connection', (socket) => {
 
   // 2. Event Spin Wheel (Putar Roda)
   socket.on('req_spin_wheel', () => {
+    const playerRoom = getPlayerRoom(socket);
     const slotIndex = Math.floor(Math.random() * 6);
     const triggerQuiz = slotIndex === 1 || slotIndex === 4; // Contoh kondisi kuis
 
@@ -74,12 +88,14 @@ io.on('connection', (socket) => {
       options: ["Tank", "Mage", "Assassin", "Marksman"]
     } : null;
 
-    io.emit('wheel_spun', { slotIndex, triggerQuiz, quizPrompt });
+    // Send payload ke room terkait saja
+    const target = playerRoom ? io.to(playerRoom) : io;
+    target.emit('wheel_spun', { slotIndex, triggerQuiz, quizPrompt });
   });
 
   // 3. Event Kirim Emote / Taunt
   socket.on('send_taunt', (data) => {
-    const playerRoom = Array.from(socket.rooms).find(r => r !== socket.id);
+    const playerRoom = getPlayerRoom(socket);
     const sender = rooms[playerRoom]?.players.find(p => p.id === socket.id);
     
     io.to(playerRoom || socket.id).emit('taunt_received', {
@@ -99,8 +115,11 @@ io.on('connection', (socket) => {
 
   // 5. Event Sabotase (Swap / Freeze)
   socket.on('req_use_sabotage', (data) => {
-    const { targetId, itemId } = data;
-    io.emit('sabotage_executed', {
+    const playerRoom = getPlayerRoom(socket);
+    const { itemId } = data;
+    
+    const target = playerRoom ? io.to(playerRoom) : io;
+    target.emit('sabotage_executed', {
       effectSummary: `Efek ${itemId} berhasil diterapkan ke lawan!`
     });
   });
@@ -114,6 +133,7 @@ io.on('connection', (socket) => {
         delete rooms[roomId];
       } else {
         io.to(roomId).emit('room_state_update', rooms[roomId]);
+        io.to(roomId).emit('updateGameState', rooms[roomId]);
       }
     }
   });
