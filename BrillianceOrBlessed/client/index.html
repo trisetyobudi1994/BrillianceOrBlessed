@@ -47,7 +47,7 @@
     /* CONTAINER UTAMA RESPONSIVE */
     #app-root {
       width: 100%;
-      max-width: 480px; /* Standar HP Potret */
+      max-width: 480px;
       min-height: 100vh;
       background: var(--bg-app);
       display: flex;
@@ -58,7 +58,7 @@
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* BUTTONS DENGAN EFEK MEMBAL (CLICK FEEDBACK) */
+    /* BUTTONS DENGAN EFEK MEMBAL */
     .btn-action {
       border: none;
       border-radius: var(--radius-md);
@@ -116,7 +116,6 @@
     /* 2. GAMEPLAY DASHBOARD */
     #game-wrapper { display: none; flex-direction: column; gap: 16px; width: 100%; }
 
-    /* PROFIL BAR HEADER (PERSIS FOTO ACUAN) */
     .profile-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-xl);
@@ -137,7 +136,6 @@
     }
     .points-badge:active { transform: scale(0.95); }
 
-    /* DUAL CARDS (DAILY REWARD / MISSION STYLE) */
     .dual-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .card-item {
       border-radius: var(--radius-lg); padding: 16px;
@@ -153,7 +151,6 @@
     .tag-orange { background: #ffedd5; color: #c2410c; }
     .tag-purple { background: #f3e8ff; color: #7e22ce; }
 
-    /* PASS BANNER CARD (ORANGE HERO) */
     .pass-banner {
       background: var(--orange-gradient);
       border-radius: var(--radius-xl);
@@ -167,13 +164,20 @@
       background: rgba(255, 255, 255, 0.1); border-radius: 50%; pointer-events: none;
     }
 
-    /* CANVAS ARENA CONTAINER */
     .canvas-card {
       background: var(--card-bg); border-radius: var(--radius-xl); padding: 14px;
       border: 1px solid var(--border-subtle); box-shadow: var(--shadow-soft);
       display: flex; flex-direction: column; align-items: center; gap: 12px;
     }
     canvas { border-radius: var(--radius-lg); max-width: 100%; height: auto; background: #f8fafc; }
+
+    .taunt-bar {
+      display: flex; gap: 8px; justify-content: center; margin-top: 6px;
+    }
+    .btn-taunt {
+      background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 1.1rem; cursor: pointer; transition: transform 0.15s;
+    }
+    .btn-taunt:active { transform: scale(0.9); }
 
     /* MODAL OVERLAY */
     .modal-overlay {
@@ -185,7 +189,6 @@
       display: flex; flex-direction: column; gap: 16px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
 
-    /* RESPONSIF LAYAR DIPUTAR (LANDSCAPE & TABLET / DESKTOP) */
     @media (min-width: 768px), (orientation: landscape) and (max-height: 500px) {
       #app-root {
         max-width: 1040px;
@@ -239,7 +242,7 @@
       <!-- KANAN / LEFT SIDEBAR PANEL -->
       <div style="display: flex; flex-direction: column; gap: 14px;">
         
-        <!-- HEADER PROFIL (ACUAN MODEL ACUAN FOTO) -->
+        <!-- HEADER PROFIL -->
         <div class="profile-bar">
           <div class="user-info">
             <div class="avatar-box" id="avatar-initial">B</div>
@@ -295,18 +298,29 @@
             <span style="font-size: 0.75rem; font-weight: 700;">Mulai Rp9.900</span>
           </div>
           <div>
-            <h4 style="font-size: 1.05rem; font-weight: 800; line-height: 1.3;">Top Up Diamond Instant & Hemat Pass!</h4>
+            <h4 style="font-size: 1.05rem; font-weight: 800; line-height: 1.3;">Top Up Diamond Instant & Pass!</h4>
             <p style="font-size: 0.73rem; opacity: 0.9; margin-top: 4px;">Akses buff khusus dan item sabotase tanpa batas di arena.</p>
           </div>
           <button class="btn-action btn-dark" style="width: 100%; padding: 12px;" onclick="buyGold(10000, 5000)">⚡ Beli Pass Sekarang</button>
         </div>
 
-        <!-- ROSTER PEMAIN & TURNS -->
+        <!-- ROSTER PEMAIN & TAUNTS -->
         <div class="card-item" style="background: #ffffff; border: 1px solid var(--border-subtle);">
           <div style="font-size: 0.8rem; font-weight: 800;">Roster Lawan & Giliran</div>
           <div id="player-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;"></div>
           <div id="turn-indicator" style="font-size: 0.78rem; font-weight: 800; text-align: center; color: var(--primary-orange); margin-top: 8px;">
             Connecting to arena...
+          </div>
+          
+          <!-- TAUNT EMOTE BAR -->
+          <div style="margin-top: 8px; border-top: 1px dashed var(--border-subtle); padding-top: 6px;">
+            <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-align: center; margin-bottom: 4px;">Kirim Emote Taktis</div>
+            <div class="taunt-bar">
+              <button class="btn-taunt" onclick="sendTaunt('🔥')">🔥</button>
+              <button class="btn-taunt" onclick="sendTaunt('😂')">😂</button>
+              <button class="btn-taunt" onclick="sendTaunt('🎯')">🎯</button>
+              <button class="btn-taunt" onclick="sendTaunt('💣')">💣</button>
+            </div>
           </div>
         </div>
 
@@ -373,9 +387,12 @@
     let myInventory = [];
     let currentMode = 'solo';
     let isPaused = false;
+    let lastTurnId = null;
+    let hasSpunThisTurn = false;
 
     function showToast(msg) {
       const container = document.getElementById('toast-container');
+      if (!container) return;
       const toast = document.createElement('div');
       toast.className = 'toast';
       toast.innerText = msg;
@@ -435,7 +452,7 @@
     }
 
     function buySabotage(itemType, cost) {
-      const currentGold = parseInt(document.getElementById('my-gold').innerText);
+      const currentGold = parseInt(document.getElementById('my-gold').innerText) || 0;
       if (currentGold < cost) {
         showToast('Diamond tidak cukup');
         return;
@@ -447,13 +464,18 @@
     }
 
     function spinWheel() {
-      if (socket) socket.emit('req_spin_wheel');
+      hasSpunThisTurn = true;
       document.getElementById('wheel-modal').style.display = 'none';
+      if (socket) socket.emit('req_spin_wheel');
     }
 
     function answerQuiz(optIndex) {
       if (socket) socket.emit('submit_quiz_answer', { selectedIndex: optIndex });
       document.getElementById('quiz-modal').style.display = 'none';
+    }
+
+    function sendTaunt(emoteId) {
+      if (socket) socket.emit('send_taunt', { emoteId });
     }
 
     async function buyGold(amount, gold) {
@@ -469,9 +491,11 @@
           snap.pay(data.token, {
             onSuccess: function() {
               const el = document.getElementById('my-gold');
-              el.innerText = parseInt(el.innerText) + gold;
+              el.innerText = (parseInt(el.innerText) || 0) + gold;
               showToast('Top Up Berhasil!');
-            }
+            },
+            onPending: function() { showToast('Menunggu Pembayaran...'); },
+            onError: function() { showToast('Pembayaran Gagal!'); }
           });
         }
       } catch (err) {
@@ -488,37 +512,68 @@
 
       socket.on('wheel_spun', (data) => {
         if (isPaused) return;
-        showToast(`Dadu: ${data.slotIndex + 1} Langkah`);
+        showToast(`Dadu: ${data.steps} Langkah (${data.slotResult?.label || ''})`);
         if (data.triggerQuiz && data.quizPrompt) {
           document.getElementById('quiz-question').innerText = data.quizPrompt.question;
-          data.quizPrompt.options.forEach((optText, idx) => {
-            document.getElementById(`opt-${idx}`).innerText = optText;
-          });
+          if (Array.isArray(data.quizPrompt.options)) {
+            data.quizPrompt.options.forEach((optText, idx) => {
+              const btn = document.getElementById(`opt-${idx}`);
+              if (btn) btn.innerText = optText;
+            });
+          }
           document.getElementById('quiz-modal').style.display = 'flex';
         }
+      });
+
+      socket.on('quiz_result', (res) => {
+        showToast(res.message);
+      });
+
+      socket.on('taunt_received', (data) => {
+        showToast(`${data.senderName}: ${data.emoteId}`);
+      });
+
+      socket.on('error_msg', (msg) => {
+        showToast(msg);
       });
     }
 
     function updateUI() {
       if (!currentGameState || isPaused) return;
+
+      // Update Roster Pemain
       const list = document.getElementById('player-list');
       list.innerHTML = '';
 
       currentGameState.players.forEach(p => {
         const isMe = socket && p.id === socket.id;
+        if (isMe) {
+          document.getElementById('my-gold').innerText = p.gold;
+        }
         const div = document.createElement('div');
         div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:10px; font-size:0.75rem;";
         div.innerHTML = `<span style="font-weight:700;">${p.name} ${isMe ? '(Kamu)' : ''}</span><span style="color:var(--text-muted); font-weight:600;">Kotak ${p.position + 1}</span>`;
         list.appendChild(div);
       });
 
+      const isMyTurn = currentGameState.currentTurn === socket?.id;
       const turnIndicator = document.getElementById('turn-indicator');
-      if (currentGameState.currentTurn === socket?.id && !myPath) {
-        document.getElementById('path-modal').style.display = 'flex';
-      } else if (currentGameState.currentTurn === socket?.id) {
-        document.getElementById('wheel-modal').style.display = 'flex';
+
+      // Reset status giliran saat giliran berganti
+      if (currentGameState.currentTurn !== lastTurnId) {
+        lastTurnId = currentGameState.currentTurn;
+        hasSpunThisTurn = false;
+      }
+
+      if (isMyTurn) {
+        if (!myPath) {
+          document.getElementById('path-modal').style.display = 'flex';
+        } else if (!hasSpunThisTurn && document.getElementById('quiz-modal').style.display !== 'flex') {
+          document.getElementById('wheel-modal').style.display = 'flex';
+        }
         turnIndicator.innerText = `Giliranmu (${currentGameState.timeRemaining}s)`;
       } else {
+        document.getElementById('wheel-modal').style.display = 'none';
         turnIndicator.innerText = `Giliran lawan (${currentGameState.timeRemaining}s)`;
       }
     }
@@ -526,6 +581,7 @@
     /* RENDER BOARD CANVAS */
     function renderBoard() {
       const canvas = document.getElementById('board-canvas');
+      if (!canvas) return;
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -558,12 +614,12 @@
 
       if (currentGameState?.players) {
         currentGameState.players.forEach((p, idx) => {
-          const x = (p.position % 5) * 130 + 85;
+          const x = (p.position % 5) * 130 + 75 + (idx * 12);
           const y = Math.floor(p.position / 5) * 95 + 60;
 
           ctx.beginPath();
           ctx.arc(x, y, 11, 0, Math.PI * 2);
-          ctx.fillStyle = idx === 0 ? '#ff6b00' : '#0284c7';
+          ctx.fillStyle = idx === 0 ? '#ff6b00' : (idx === 1 ? '#0284c7' : '#10b981');
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 2.5;
