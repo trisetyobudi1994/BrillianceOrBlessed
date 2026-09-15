@@ -1,196 +1,211 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const path = require('path');
+const cors = require('cors');
+const midtransClient = require('midtrans-client');
+const mongoose = require('mongoose');
 
 const app = express();
-const server = http.createServer(app);
-
-// Setup Socket.io dengan CORS terbuka
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
-
+// [PERBAIKAN PENTING]: CORS Origin "*" wajib agar aplikasi dari APK (localhost/file) diizinkan masuk
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Melayani file statis dari folder client
-app.use(express.static(path.join(__dirname, '../client')));
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
-// Data penyimpanan room & player di memory
+// ==========================================
+// MONGODB SETUP (Opsional: Jika Mongo URI kosong, server tetap jalan)
+// ==========================================
+if (process.env.MONGO_URI) {
+    mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+        .then(() => console.log('✅ MongoDB Connected'))
+        .catch(err => console.error('❌ MongoDB Connection Error:', err));
+} else {
+    console.warn('⚠️ MONGO_URI tidak ditemukan, kuis akan menggunakan data cadangan.');
+}
+
+// ==========================================
+// GAME STATE MANAGEMENT
+// ==========================================
 const rooms = {};
 
-// Handle Koneksi Socket.io
-io.on('connection', (socket) => {
-  console.log(`[+] Player Terhubung: ${socket.id}`);
-
-  // Fungsi untuk memasukkan player ke dalam room & memulai game
-  const handleJoin = (data = {}) => {
-    const roomId = data.roomId || 'default-room';
-    const name = data.name || 'Hero';
-    const phone = data.phone || '-';
-    const mode = data.mode || 'classic';
-
-    // Simpan roomId di instance socket agar mudah diakses di event lain
-    socket.roomId = roomId;
-    socket.join(roomId);
-
-    if (!rooms[roomId]) {
-      rooms[roomId] = {
-        roomId: roomId,
-        arenaReady: true, // Flag utama untuk melepas indikator "INITIALIZING ARENA"
-        gameState: 'PLAYING',
-        currentTurn: socket.id,
-        timeRemaining: 30,
-        players: []
-      };
-    } else {
-      rooms[roomId].arenaReady = true;
-    }
-
-    // Cek jika player belum ada di daftar room
-    let player = rooms[roomId].players.find(p => p.id === socket.id);
-    if (!player) {
-      player = {
-        id: socket.id,
-        name: name,
-        phone: phone,
-        position: 0,
-        gold: 1000,
-        isFrozen: false
-      };
-      rooms[roomId].players.push(player);
-    }
-
-    console.log(`[+] ${name} (${socket.id}) bergabung ke room: ${roomId} [Mode: ${mode}]`);
-
-    // Kirim pembaruan state arena ke semua pemain di room ini
-    io.to(roomId).emit('room_state_update', rooms[roomId]);
-    io.to(roomId).emit('updateGameState', rooms[roomId]);
-  };
-
-  // 1. Tangkap event join
-  socket.on('join_room', handleJoin);
-  socket.on('join_game', handleJoin);
-
-  // 2. Event Spin Wheel
-  socket.on('req_spin_wheel', () => {
-    const roomId = socket.roomId;
-    if (!roomId || !rooms[roomId]) return;
-
-    const slotIndex = Math.floor(Math.random() * 6);
-    const triggerQuiz = slotIndex === 1 || slotIndex === 4;
-
-    const quizPrompt = triggerQuiz ? {
-      question: "Apa role utama Hero Tigreal di Mobile Legends?",
-      imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400",
-      options: ["Tank", "Mage", "Assassin", "Marksman"]
-    } : null;
-
-    // Broadcast khusus ke room terkait
-    io.to(roomId).emit('wheel_spun', { slotIndex, triggerQuiz, quizPrompt, playerId: socket.id });
-  });
-
-  // 3. Event Kirim Emote / Taunt
-  socket.on('send_taunt', (data = {}) => {
-    const roomId = socket.roomId;
-    if (!roomId || !rooms[roomId]) return;
-
-    const sender = rooms[roomId].players.find(p => p.id === socket.id);
-
-    io.to(roomId).emit('taunt_received', {
-      senderId: socket.id,
-      senderName: sender ? sender.name : 'Hero',
-      emoteId: data.emoteId
-    });
-  });
-
-  // 4. Event Jawab Kuis
-  socket.on('submit_quiz_answer', (data = {}) => {
-    const roomId = socket.roomId;
-    const isCorrect = data.selectedIndex === 0; // Jawaban benar: Tank (indeks 0)
-
-    if (roomId && rooms[roomId]) {
-      const player = rooms[roomId].players.find(p => p.id === socket.id);
-      if (player && isCorrect) {
-        player.gold += 100;
-        // Sync state terbaru ke client
-        io.to(roomId).emit('room_state_update', rooms[roomId]);
-        io.to(roomId).emit('updateGameState', rooms[roomId]);
-      }
-    }
-
-    socket.emit('quiz_result', {
-      success: isCorrect,
-      message: isCorrect ? 'Jawaban Benar! +100 Gold 💎' : 'Jawaban Salah!'
-    });
-  });
-
-  // 5. Event Sabotase (Swap / Freeze)
-  socket.on('req_use_sabotage', (data = {}) => {
-    const roomId = socket.roomId;
-    if (!roomId || !rooms[roomId]) return;
-
-    const { itemId, targetId } = data;
+// Fungsi untuk memindahkan giliran ke pemain selanjutnya
+function nextTurn(roomId) {
     const room = rooms[roomId];
+    if (!room || room.players.length === 0) return;
 
-    if (itemId === 'freeze' && targetId) {
-      const targetPlayer = room.players.find(p => p.id === targetId);
-      if (targetPlayer) targetPlayer.isFrozen = true;
-    }
+    let currentIndex = room.players.findIndex(p => p.id === room.currentTurn);
+    let nextIndex = (currentIndex + 1) % room.players.length;
 
-    io.to(roomId).emit('sabotage_executed', {
-      executorId: socket.id,
-      itemId: itemId,
-      effectSummary: `Efek ${itemId || 'sabotase'} berhasil diterapkan!`
-    });
+    room.currentTurn = room.players[nextIndex].id;
+    room.timeRemaining = 30; // Reset waktu menjadi 30 detik
 
-    io.to(roomId).emit('room_state_update', room);
-    io.to(roomId).emit('updateGameState', room);
-  });
+    // Broadcast update state ke semua pemain di ruangan
+    io.to(roomId).emit("room_state_update", room);
+}
 
-  // 6. Handle Disconnect
-  socket.on('disconnect', () => {
-    console.log(`[-] Player Terputus: ${socket.id}`);
-    const roomId = socket.roomId;
+// Sistem Timer Real-time (Berjalan setiap 1 detik)
+function startRoomTimer(roomId) {
+    if (rooms[roomId].timerInterval) clearInterval(rooms[roomId].timerInterval);
+    
+    rooms[roomId].timerInterval = setInterval(() => {
+        const room = rooms[roomId];
+        if (!room) return;
 
-    if (roomId && rooms[roomId]) {
-      const room = rooms[roomId];
-      room.players = room.players.filter(p => p.id !== socket.id);
+        room.timeRemaining -= 1;
+        
+        if (room.timeRemaining <= 0) {
+            // Waktu habis, pindah giliran otomatis
+            nextTurn(roomId);
+        } else {
+            // Update waktu ke UI
+            io.to(roomId).emit("room_state_update", room);
+        }
+    }, 1000);
+}
 
-      if (room.players.length === 0) {
-        delete rooms[roomId];
-      } else {
-        // Jika player yang disconnect sedang memegang giliran, oper giliran ke pemain pertama yang tersisa
-        if (room.currentTurn === socket.id) {
-          room.currentTurn = room.players[0].id;
+// ==========================================
+// SOCKET.IO EVENT HANDLERS
+// ==========================================
+io.on("connection", (socket) => {
+    console.log("⚡ Player terhubung:", socket.id);
+
+    // Pemain Bergabung ke Arena
+    socket.on("join_game", (data) => {
+        const { roomId, name, phone } = data;
+        socket.join(roomId);
+
+        // Buat room baru jika belum ada
+        if (!rooms[roomId]) {
+            rooms[roomId] = {
+                id: roomId,
+                players: [],
+                currentTurn: socket.id, // Giliran pertama diberikan ke pembuat room
+                timeRemaining: 30,
+                arenaReady: true,       // WAJIB: Agar teks INITIALIZING hilang di Frontend
+                gameState: 'PLAYING'    // WAJIB
+            };
+            startRoomTimer(roomId);
         }
 
-        io.to(roomId).emit('room_state_update', room);
-        io.to(roomId).emit('updateGameState', room);
-      }
+        // Tambahkan pemain ke dalam room
+        const playerExists = rooms[roomId].players.find(p => p.id === socket.id);
+        if (!playerExists) {
+            rooms[roomId].players.push({
+                id: socket.id,
+                name: name || "Hero",
+                phone: phone,
+                position: 0,
+                gold: 0,
+                isFrozen: false
+            });
+        }
+
+        // Kirim update state ke Frontend untuk mengubah UI
+        io.to(roomId).emit("room_state_update", rooms[roomId]);
+    });
+
+    // Fitur Taunting Emoji
+    socket.on("send_taunt", (data) => {
+        const roomId = Array.from(socket.rooms).find(r => r !== socket.id);
+        if (roomId && rooms[roomId]) {
+            const player = rooms[roomId].players.find(p => p.id === socket.id);
+            io.to(roomId).emit("taunt_received", { senderName: player?.name || "Unknown", emoteId: data.emoteId });
+        }
+    });
+
+    // Fitur Spin Wheel & Kuis
+    socket.on("req_spin_wheel", () => {
+        const roomId = Array.from(socket.rooms).find(r => r !== socket.id);
+        if (roomId && rooms[roomId]) {
+            // Jika bukan gilirannya, blokir
+            if (rooms[roomId].currentTurn !== socket.id) return; 
+
+            const slotIndex = Math.floor(Math.random() * 6);
+            const triggerQuiz = (slotIndex === 0 || slotIndex === 3); // Kuis acak
+
+            io.to(roomId).emit("wheel_spun", {
+                slotIndex,
+                triggerQuiz,
+                quizPrompt: triggerQuiz ? {
+                    question: "Esport manakah yang paling populer di Asia Tenggara?",
+                    options: ["Dota 2", "Mobile Legends", "Valorant", "PUBG"],
+                    answer: 1
+                } : null
+            });
+
+            // Tunda perpindahan giliran agar animasi Spin/Kuis selesai
+            setTimeout(() => {
+                nextTurn(roomId);
+            }, 6000);
+        }
+    });
+
+    // Pemain Keluar/Putus Koneksi
+    socket.on("disconnect", () => {
+        console.log("❌ Player keluar:", socket.id);
+        for (const roomId in rooms) {
+            const room = rooms[roomId];
+            room.players = room.players.filter(p => p.id !== socket.id);
+            
+            // Jika room kosong, matikan timer dan hapus room
+            if (room.players.length === 0) {
+                clearInterval(room.timerInterval);
+                delete rooms[roomId];
+            } else if (room.currentTurn === socket.id) {
+                // Jika pemain yang disconnect sedang giliran, pindah ke pemain lain
+                nextTurn(roomId);
+            } else {
+                io.to(roomId).emit("room_state_update", room);
+            }
+        }
+    });
+});
+
+// ==========================================
+// PAYMENT GATEWAY API (MIDTRANS)
+// ==========================================
+app.post('/api/payment/charge', async (req, res) => {
+    try {
+        const { amount, phone, goldAmount } = req.body;
+        
+        // Inisialisasi Midtrans Snap
+        let snap = new midtransClient.Snap({
+            isProduction: false,
+            // Masukkan Server Key Anda di Environment Variable Railway
+            serverKey: process.env.MIDTRANS_SERVER_KEY || 'SB-Mid-server-DEMO_KEY'
+        });
+
+        let parameter = {
+            transaction_details: {
+                order_id: "DIAMOND-" + Date.now(),
+                gross_amount: amount
+            },
+            customer_details: {
+                phone: phone
+            }
+        };
+        
+        const transaction = await snap.createTransaction(parameter);
+        res.json({ success: true, token: transaction.token });
+    } catch (error) {
+        console.error("Midtrans Error:", error);
+        res.status(500).json({ success: false, message: 'Gagal membuat transaksi' });
     }
-  });
 });
 
-// Endpoint Dummy Payment Midtrans
-app.post('/api/payment/charge', (req, res) => {
-  res.json({
-    success: true,
-    token: "dummy-snap-token-123456"
-  });
-});
-
-// Fallback Route untuk melayani file index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
-});
-
-const PORT = process.env.PORT || 3000;
+// ==========================================
+// START SERVER
+// ==========================================
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`=================================`);
-  console.log(`Server running on port ${PORT}`);
-  console.log(`=================================`);
+    console.log(`=================================`);
+    console.log(`🚀 Server berjalan di PORT ${PORT}`);
+    console.log(`=================================`);
 });
