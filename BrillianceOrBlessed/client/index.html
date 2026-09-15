@@ -276,8 +276,7 @@
     // SOCKET & GAME LOGIC
     // ==========================================
     
-    // DETEKSI OTOMATIS: Menggunakan host saat ini jika diakses via Web/APK, 
-    // atau fallback ke Railway / Local Server jika berjalan terpisah.
+    // DETEKSI OTOMATIS SOCKET HOST
     const SOCKET_URL = window.location.origin.includes('http') && !window.location.origin.includes('file://')
       ? window.location.origin
       : 'https://brillianceorblessed-production.up.railway.app';
@@ -328,7 +327,7 @@
       if (socket) {
         // Mengirimkan event bergabung ke room
         socket.emit('join_room', { roomId, phone, name, mode });
-        socket.emit('join_game', { roomId, phone, name, mode }); // Backup event kompatibilitas
+        socket.emit('join_game', { roomId, phone, name, mode });
       }
       
       showToast(`Entering Arena: ${name}`);
@@ -457,10 +456,14 @@
         showToast(data.effectSummary);
       });
 
-      socket.on('room_state_update', (state) => {
+      // LISTENERS UNTUK PEMBARUAN STATE ARENA (Dua Event untuk Mengatasi Stuck)
+      const handleStateUpdate = (state) => {
         currentGameState = state;
         updateUI();
-      });
+      };
+
+      socket.on('room_state_update', handleStateUpdate);
+      socket.on('updateGameState', handleStateUpdate);
     }
 
     function spinWheel() {
@@ -483,38 +486,41 @@
       const list = document.getElementById('player-list');
       list.innerHTML = '';
 
-      const me = currentGameState.players.find(p => p.id === (socket ? socket.id : ''));
+      const me = currentGameState.players ? currentGameState.players.find(p => p.id === (socket ? socket.id : '')) : null;
       if (me && me.isFrozen) {
         document.getElementById('freeze-overlay').style.display = 'flex';
       } else {
         document.getElementById('freeze-overlay').style.display = 'none';
       }
 
-      currentGameState.players.forEach(p => {
-        const div = document.createElement('div');
-        div.style.cssText = "background: var(--card-gradient); padding:6px 10px; border-radius:6px; border:1px solid rgba(0,240,255,0.2); font-size:11px; display:flex; justify-content:space-between; align-items:center;";
-        
-        let sabotageBtns = '';
-        if (socket && p.id !== socket.id && currentGameState.currentTurn === socket.id) {
-          sabotageBtns = `<span><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'SWAP')">SWAP</button><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'FREEZE')">ICE</button></span>`;
-        }
+      if (currentGameState.players) {
+        currentGameState.players.forEach(p => {
+          const div = document.createElement('div');
+          div.style.cssText = "background: var(--card-gradient); padding:6px 10px; border-radius:6px; border:1px solid rgba(0,240,255,0.2); font-size:11px; display:flex; justify-content:space-between; align-items:center;";
+          
+          let sabotageBtns = '';
+          if (socket && p.id !== socket.id && currentGameState.currentTurn === socket.id) {
+            sabotageBtns = `<span><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'SWAP')">SWAP</button><button class="btn-sabotage" onclick="triggerSabotage('${p.id}', 'FREEZE')">ICE</button></span>`;
+          }
 
-        div.innerHTML = `<div><strong>${p.name}</strong><br>Pos: ${p.position} | 💎 ${p.gold}</div>${sabotageBtns}`;
-        list.appendChild(div);
-      });
+          div.innerHTML = `<div><strong>${p.name}</strong><br>Pos: ${p.position} | 💎 ${p.gold}</div>${sabotageBtns}`;
+          list.appendChild(div);
+        });
+      }
 
       const modal = document.getElementById('wheel-modal');
       const turnIndicator = document.getElementById('turn-indicator');
 
-      if (currentGameState.gameState === 'PLAYING') {
+      // FIXED: Membuka arena jika arenaReady bernilai true ATAU gameState bernilai 'PLAYING'
+      if (currentGameState.arenaReady || currentGameState.gameState === 'PLAYING') {
         if (socket && currentGameState.currentTurn === socket.id) {
           modal.style.display = 'flex';
-          turnIndicator.innerText = `YOUR TURN! (${currentGameState.timeRemaining}s)`;
+          turnIndicator.innerText = `YOUR TURN! (${currentGameState.timeRemaining || 15}s)`;
           turnIndicator.style.color = '#00f0ff';
         } else {
           modal.style.display = 'none';
-          const currPlayer = currentGameState.players.find(p => p.id === currentGameState.currentTurn);
-          turnIndicator.innerText = `TURN: ${currPlayer ? currPlayer.name : '...'} (${currentGameState.timeRemaining}s)`;
+          const currPlayer = currentGameState.players ? currentGameState.players.find(p => p.id === currentGameState.currentTurn) : null;
+          turnIndicator.innerText = `TURN: ${currPlayer ? currPlayer.name : 'HERO'} (${currentGameState.timeRemaining || 15}s)`;
           turnIndicator.style.color = '#ffb703';
         }
       }
