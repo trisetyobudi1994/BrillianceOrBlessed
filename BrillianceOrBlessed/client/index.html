@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Brilliance or Blessed - Professional Esport Arena</title>
   
-  <!-- Socket.io & Midtrans Client Libraries -->
+  <!-- Socket.io Client Library -->
   <script src="/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-YOUR_CLIENT_KEY"></script>
+  <!-- Midtrans Client Library (Ganti SB-Mid-client-XXXXX dengan Client Key Anda) -->
+  <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-DEMO_KEY"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 
@@ -88,13 +89,13 @@
     }
     #game-container {
       flex: 1; position: relative; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; overflow: hidden;
+      align-items: center; justify-content: center; overflow: hidden; padding: 10px;
     }
     #board-canvas {
       border-radius: 20px;
       box-shadow: 0 0 60px rgba(0, 240, 255, 0.25), inset 0 0 25px rgba(0,0,0,0.85);
       border: 2px solid rgba(0, 240, 255, 0.5);
-      max-width: 100%; height: auto;
+      max-width: 100%; height: auto; object-fit: contain;
     }
 
     /* MODALS & OVERLAYS */
@@ -105,9 +106,9 @@
     }
     .quiz-card {
       background: var(--card-gradient); border: 2px solid var(--border-glow); border-radius: 20px;
-      padding: 25px; width: 420px; text-align: center; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4);
+      padding: 25px; width: 420px; max-width: 90%; text-align: center; box-shadow: 0 0 50px rgba(0, 240, 255, 0.4);
     }
-    .quiz-img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin: 12px 0; border: 2px solid var(--border-glow); }
+    .quiz-img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin: 12px 0; border: 2px solid var(--border-glow); background: #1e293b; }
     .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 
     #wheel-modal {
@@ -201,7 +202,7 @@
         <div class="quiz-card">
           <h3 class="gold-text" style="font-size: 18px;">TRIVIA CHALLENGE!</h3>
           <p style="font-size:12px; margin-top:4px;" id="quiz-question">Jawab cepat untuk bonus Diamond!</p>
-          <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400" id="quiz-img" class="quiz-img" alt="Quiz">
+          <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400" id="quiz-img" class="quiz-img" alt="Quiz Image" onerror="this.src='https://via.placeholder.com/400x160/0f172a/00f0ff?text=Trivia+Challenge'">
           <div class="quiz-options" id="quiz-options-container">
             <button class="btn-ml" onclick="answerQuiz(0)" id="opt-0">A</button>
             <button class="btn-ml" onclick="answerQuiz(1)" id="opt-1">B</button>
@@ -230,17 +231,19 @@
     let bgmInterval = null;
 
     function playSFX(freq, type = 'sine', duration = 0.2) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) { console.log('Audio Autoplay Blocked'); }
     }
 
     function startBGM() {
@@ -248,18 +251,20 @@
       const notes = [220, 246.94, 277.18, 329.63, 369.99];
       let index = 0;
       bgmInterval = setInterval(() => {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(notes[index % notes.length], audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
-        index++;
+        try {
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(notes[index % notes.length], audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+          index++;
+        } catch(e) {}
       }, 400);
     }
 
@@ -273,29 +278,37 @@
     }
 
     // ==========================================
-    // SOCKET & GAME LOGIC
+    // SOCKET & GAME LOGIC PERBAIKAN
     // ==========================================
-    
-    // DETEKSI OTOMATIS SOCKET HOST
     const SOCKET_URL = window.location.origin.includes('http') && !window.location.origin.includes('file://')
       ? window.location.origin
       : 'https://brillianceorblessed-production.up.railway.app';
 
-    // Inisialisasi Socket connection
-    const socket = (typeof io !== 'undefined') ? io(SOCKET_URL) : null;
+    // Socket Option dengan Reconnection Otomatis
+    const socket = (typeof io !== 'undefined') ? io(SOCKET_URL, {
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000
+    }) : null;
+
     let currentGameState = null;
     let currentUser = null;
     const boardCanvas = document.getElementById('board-canvas');
 
     if (!socket) {
       console.error("Socket.io library tidak berhasil dimuat.");
+      showToast("Library Socket.io tidak ditemukan!");
     } else {
       socket.on('connect', () => {
-        showToast("Connected to Server ID: " + socket.id);
+        showToast("Terhubung ke Server Arena");
+      });
+
+      socket.on('disconnect', () => {
+        showToast("Koneksi terputus! Mencoba terhubung kembali...");
       });
 
       socket.on('connect_error', (err) => {
-        showToast("Gagal terhubung ke server backend!");
+        console.warn("Connection Error:", err);
       });
     }
 
@@ -317,7 +330,6 @@
       playSFX(880, 'sine', 0.4);
       startBGM();
 
-      // Transisi UI dari Main Menu ke Game Arena
       document.getElementById('main-menu').style.display = 'none';
       document.getElementById('game-wrapper').style.display = 'flex';
       document.getElementById('player-title').innerText = name;
@@ -325,7 +337,6 @@
       const roomId = mode === 'solo' ? 'room_solo_' + (socket ? socket.id : Date.now()) : 'room_main';
       
       if (socket) {
-        // Mengirimkan event bergabung ke room
         socket.emit('join_room', { roomId, phone, name, mode });
         socket.emit('join_game', { roomId, phone, name, mode });
       }
@@ -344,11 +355,15 @@
         const data = await res.json();
         if (data.success && typeof snap !== 'undefined') {
           snap.pay(data.token, {
-            onSuccess: function() { playSFX(1200, 'triangle', 0.5); showToast('Topup Diamond Berhasil!'); }
+            onSuccess: function() { playSFX(1200, 'triangle', 0.5); showToast('Topup Diamond Berhasil!'); },
+            onPending: function() { showToast('Menunggu Pembayaran...'); },
+            onError: function() { showToast('Pembayaran Gagal!'); }
           });
+        } else {
+          showToast('Payment Gateway tidak siap');
         }
       } catch (err) {
-        showToast('Fitur Topup tidak tersedia');
+        showToast('Fitur Topup tidak tersedia (Server offline)');
       }
     }
 
@@ -440,9 +455,10 @@
 
           if (data.triggerQuiz && data.quizPrompt) {
             document.getElementById('quiz-question').innerText = data.quizPrompt.question;
-            document.getElementById('quiz-img').src = data.quizPrompt.imageUrl;
+            if (data.quizPrompt.imageUrl) document.getElementById('quiz-img').src = data.quizPrompt.imageUrl;
             data.quizPrompt.options.forEach((optText, idx) => {
-              document.getElementById(`opt-${idx}`).innerText = optText;
+              const btn = document.getElementById(`opt-${idx}`);
+              if (btn) btn.innerText = optText;
             });
             document.getElementById('quiz-modal').style.display = 'flex';
           }
@@ -456,7 +472,6 @@
         showToast(data.effectSummary);
       });
 
-      // LISTENERS UNTUK PEMBARUAN STATE ARENA (Dua Event untuk Mengatasi Stuck)
       const handleStateUpdate = (state) => {
         currentGameState = state;
         updateUI();
@@ -511,7 +526,6 @@
       const modal = document.getElementById('wheel-modal');
       const turnIndicator = document.getElementById('turn-indicator');
 
-      // FIXED: Membuka arena jika arenaReady bernilai true ATAU gameState bernilai 'PLAYING'
       if (currentGameState.arenaReady || currentGameState.gameState === 'PLAYING') {
         if (socket && currentGameState.currentTurn === socket.id) {
           modal.style.display = 'flex';
