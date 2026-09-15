@@ -23,13 +23,14 @@ class GameEngine {
     this.playerOrder = [];
     this.currentTurnIndex = 0;
     this.boardSize = 30;
-    this.gameState = 'WAITING'; // WAITING, PLAYING, FINISHED
+    this.gameState = 'PLAYING'; // Status game default saat arena dimuat
+    this.arenaReady = true;     // FIXED: Menandakan arena sudah siap dimuat oleh client
     this.turnTimer = null;
     this.turnDuration = 15; // 15 detik per giliran
     this.timeRemaining = 15;
     
     // Status Kuis Aktif
-    this.activeQuiz = null; // Menyimpan kuis yang sedang berlangsung
+    this.activeQuiz = null; 
   }
 
   addPlayer(socketId, name, avatar) {
@@ -57,15 +58,16 @@ class GameEngine {
   }
 
   startGame() {
-    if (this.players.size < 2) return false;
+    if (this.players.size < 1) return false;
     this.gameState = 'PLAYING';
+    this.arenaReady = true; // Dipastikan bernilai true
     this.currentTurnIndex = 0;
     this.startTurnTimer();
     return true;
   }
 
   getCurrentPlayerId() {
-    return this.playerOrder[this.currentTurnIndex];
+    return this.playerOrder[this.currentTurnIndex] || null;
   }
 
   startTurnTimer() {
@@ -74,7 +76,7 @@ class GameEngine {
     
     // Cek status pembekuan giliran
     const currId = this.getCurrentPlayerId();
-    const player = this.players.get(currId);
+    const player = currId ? this.players.get(currId) : null;
     if (player && player.isFrozen) {
       player.isFrozen = false;
       this.nextTurn();
@@ -95,8 +97,10 @@ class GameEngine {
 
   nextTurn() {
     this.activeQuiz = null; // Reset status kuis saat ganti giliran
-    this.currentTurnIndex = (this.currentTurnIndex + 1) % this.playerOrder.length;
-    this.startTurnTimer();
+    if (this.playerOrder.length > 0) {
+      this.currentTurnIndex = (this.currentTurnIndex + 1) % this.playerOrder.length;
+      this.startTurnTimer();
+    }
   }
 
   // Mengambil Kuis Acak dari MongoDB Database
@@ -132,6 +136,8 @@ class GameEngine {
     const resultSlot = LUCKY_PATH_SLOTS[randomIndex];
     const player = this.players.get(socketId);
 
+    if (!player) return { success: false, reason: 'Pemain tidak ditemukan' };
+
     // Proses efek reward
     if (resultSlot.type === 'GOLD') player.gold += resultSlot.val;
     if (resultSlot.type === 'JACKPOT') player.gold += resultSlot.val;
@@ -163,7 +169,6 @@ class GameEngine {
       this.gameState = 'FINISHED';
       this.stopTimer();
     } else if (!quizData) {
-      // Jika tidak mendarat di petak kuis, ganti giliran seperti biasa
       this.nextTurn();
     }
 
@@ -285,9 +290,11 @@ class GameEngine {
     };
   }
 
+  // Mengembalikan data arena yang lengkap ke server & client
   getSnapshot() {
     return {
       roomId: this.roomId,
+      arenaReady: this.arenaReady, // FIXED: Properti utama agar status Stuck Initializing Arena di client hilang
       gameState: this.gameState,
       currentTurn: this.getCurrentPlayerId(),
       timeRemaining: this.timeRemaining,
