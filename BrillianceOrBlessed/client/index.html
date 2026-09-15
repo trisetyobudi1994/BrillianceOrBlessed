@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Brilliance or Blessed — Esports Tactical Arena</title>
   
   <script src="/socket.io/socket.io.js"></script>
@@ -10,164 +10,194 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-dark: #080a0f;
-      --panel-bg: rgba(16, 20, 31, 0.75);
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --accent-cyan: #38bdf8;
-      --accent-gold: #f59e0b;
-      --accent-rose: #f43f5e;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --bg-app: #f8fafc;
+      --card-bg: #ffffff;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --primary-orange: #ff6b00;
+      --orange-gradient: linear-gradient(135deg, #ff7a00 0%, #ee5100 100%);
+      --yellow-card: #fff9e6;
+      --yellow-border: #fef08a;
+      --purple-card: #f5eeff;
+      --purple-border: #e9d5ff;
+      --border-subtle: #f1f5f9;
+      --radius-xl: 24px;
       --radius-lg: 16px;
-      --radius-md: 10px;
-      --font-display: 'Space Grotesk', sans-serif;
-      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --radius-md: 12px;
+      --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
+      --font-main: 'Plus Jakarta Sans', sans-serif;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-body); user-select: none; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); -webkit-tap-highlight-color: transparent; }
     
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      height: 100vh;
-      overflow: hidden;
+      background-color: var(--bg-app);
+      color: var(--text-dark);
+      min-height: 100vh;
       display: flex;
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 85% 85%, rgba(245, 158, 11, 0.04) 0%, transparent 40%);
+      justify-content: center;
+      align-items: flex-start;
+      overflow-x: hidden;
     }
 
-    /* TYPOGRAPHY & UTILS */
-    h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
-    .text-gold { color: var(--accent-gold); }
-    .text-cyan { color: var(--accent-cyan); }
-    .text-muted { color: var(--text-muted); font-size: 0.85rem; }
+    /* CONTAINER UTAMA RESPONSIVE */
+    #app-root {
+      width: 100%;
+      max-width: 480px; /* Standar HP Potret */
+      min-height: 100vh;
+      background: var(--bg-app);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding: 18px;
+      gap: 16px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
-    /* ELEGANT BUTTONS */
-    .btn-pro {
-      background: #ffffff;
-      color: #0f172a;
+    /* BUTTONS DENGAN EFEK MEMBAL (CLICK FEEDBACK) */
+    .btn-action {
       border: none;
-      padding: 10px 18px;
-      font-weight: 600;
-      font-size: 0.85rem;
       border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-weight: 700;
+      font-size: 0.88rem;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .btn-pro:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15); }
-    .btn-pro:active { transform: translateY(0); }
-    .btn-ghost { background: transparent; color: var(--text-main); border: 1px solid var(--panel-border); }
-    .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.2); }
-    .btn-danger { background: rgba(244, 63, 94, 0.15); color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3); }
-    .btn-danger:hover { background: var(--accent-rose); color: #fff; }
+    .btn-action:active { transform: scale(0.96); }
+    .btn-orange { background: var(--orange-gradient); color: #ffffff; box-shadow: 0 8px 20px -4px rgba(255, 107, 0, 0.4); }
+    .btn-dark { background: #0f172a; color: #ffffff; }
+    .btn-ghost { background: var(--card-bg); border: 1px solid var(--border-subtle); color: var(--text-dark); }
+    .btn-danger { background: #fee2e2; color: #dc2626; }
 
-    /* TOAST NOTIFICATION */
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+    /* TOAST NOTIFIKASI ELEGAN */
+    #toast-container { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; width: 90%; max-width: 380px; }
     .toast {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid var(--panel-border);
-      backdrop-filter: blur(12px);
-      color: var(--text-main);
+      background: #0f172a;
+      color: #ffffff;
       padding: 12px 18px;
       border-radius: var(--radius-md);
       font-size: 0.85rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      animation: fadeIn 0.3s ease;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -15px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-    /* MAIN MENU PRO */
+    /* 1. MAIN MENU */
     #main-menu {
-      position: absolute; inset: 0;
-      background: var(--bg-dark);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 100;
+      display: flex; flex-direction: column; gap: 20px; justify-content: center; min-height: 85vh;
     }
-    .menu-card {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      backdrop-filter: blur(20px);
-      padding: 40px;
-      border-radius: var(--radius-lg);
-      width: 100%; max-width: 400px;
+    .hero-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      padding: 28px 24px;
+      box-shadow: var(--shadow-soft);
       display: flex; flex-direction: column; gap: 16px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-subtle);
     }
-    .input-pro {
-      width: 100%; padding: 12px 16px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--panel-border);
-      background: rgba(0, 0, 0, 0.2);
-      color: var(--text-main);
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s;
+    .input-group label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 6px; letter-spacing: 0.03em; }
+    .input-field {
+      width: 100%; padding: 14px 16px; border-radius: var(--radius-md); border: 1.5px solid #e2e8f0;
+      background: #f8fafc; font-size: 0.95rem; font-weight: 600; outline: none; transition: border-color 0.2s;
     }
-    .input-pro:focus { border-color: var(--accent-cyan); }
+    .input-field:focus { border-color: var(--primary-orange); background: #ffffff; }
 
-    /* GAMEPLAY LAYOUT */
-    #game-wrapper { display: none; width: 100vw; height: 100vh; }
-    #sidebar {
-      width: 340px;
-      background: var(--panel-bg);
-      border-right: 1px solid var(--panel-border);
-      backdrop-filter: blur(20px);
-      padding: 24px;
-      display: flex; flex-direction: column; gap: 20px;
+    /* 2. GAMEPLAY DASHBOARD */
+    #game-wrapper { display: none; flex-direction: column; gap: 16px; width: 100%; }
+
+    /* PROFIL BAR HEADER (PERSIS FOTO ACUAN) */
+    .profile-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-soft); border: 1px solid var(--border-subtle);
     }
-    #game-container {
-      flex: 1; position: relative;
-      display: flex; align-items: center; justify-content: center;
-      padding: 20px;
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .avatar-box {
+      width: 48px; height: 48px; border-radius: 50%; background: #fed7aa;
+      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: #c2410c;
+      border: 2px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
-    #board-canvas {
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--panel-border);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    .badge-admin {
+      background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 8px;
+    }
+    .points-badge {
+      background: #fffbe3; border: 1px solid #fef08a; padding: 6px 14px; border-radius: var(--radius-lg);
+      display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; transition: transform 0.2s;
+    }
+    .points-badge:active { transform: scale(0.95); }
+
+    /* DUAL CARDS (DAILY REWARD / MISSION STYLE) */
+    .dual-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card-item {
+      border-radius: var(--radius-lg); padding: 16px;
+      display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+    .card-item.yellow { background: var(--yellow-card); border: 1px solid var(--yellow-border); }
+    .card-item.purple { background: var(--purple-card); border: 1px solid var(--purple-border); }
+    
+    .pill-tag {
+      font-size: 0.68rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; width: fit-content;
+    }
+    .tag-orange { background: #ffedd5; color: #c2410c; }
+    .tag-purple { background: #f3e8ff; color: #7e22ce; }
+
+    /* PASS BANNER CARD (ORANGE HERO) */
+    .pass-banner {
+      background: var(--orange-gradient);
+      border-radius: var(--radius-xl);
+      padding: 22px; color: #ffffff;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: 0 12px 28px -6px rgba(255, 107, 0, 0.45);
+      position: relative; overflow: hidden;
+    }
+    .pass-banner::after {
+      content: ''; position: absolute; right: -20px; bottom: -20px; width: 120px; height: 120px;
+      background: rgba(255, 255, 255, 0.1); border-radius: 50%; pointer-events: none;
     }
 
-    /* CARD PANELS IN SIDEBAR */
-    .sidebar-card {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--panel-border);
-      border-radius: var(--radius-md);
-      padding: 14px;
-      display: flex; flex-direction: column; gap: 10px;
+    /* CANVAS ARENA CONTAINER */
+    .canvas-card {
+      background: var(--card-bg); border-radius: var(--radius-xl); padding: 14px;
+      border: 1px solid var(--border-subtle); box-shadow: var(--shadow-soft);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
     }
+    canvas { border-radius: var(--radius-lg); max-width: 100%; height: auto; background: #f8fafc; }
 
-    /* MODAL OVERLAY ELEGANT */
+    /* MODAL OVERLAY */
     .modal-overlay {
-      position: absolute; inset: 0;
-      background: rgba(8, 10, 15, 0.85);
-      backdrop-filter: blur(12px);
-      display: none; align-items: center; justify-content: center;
-      z-index: 200;
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px;
     }
     .modal-card {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: var(--radius-lg);
-      padding: 32px; width: 100%; max-width: 420px;
-      text-align: center;
-      display: flex; flex-direction: column; gap: 16px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      background: var(--card-bg); border-radius: var(--radius-xl); padding: 26px; width: 100%; max-width: 380px;
+      display: flex; flex-direction: column; gap: 16px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     }
 
-    .badge-item {
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--accent-cyan);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+    /* RESPONSIF LAYAR DIPUTAR (LANDSCAPE & TABLET / DESKTOP) */
+    @media (min-width: 768px), (orientation: landscape) and (max-height: 500px) {
+      #app-root {
+        max-width: 1040px;
+        padding: 24px;
+      }
+      #game-wrapper {
+        display: none;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      .canvas-card { height: 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -175,133 +205,160 @@
 
   <div id="toast-container"></div>
 
-  <!-- 1. MAIN MENU -->
-  <div id="main-menu">
-    <div style="text-align: center; margin-bottom: 24px;">
-      <h1 style="font-size: 2rem; font-weight: 700;">Brilliance <span class="text-cyan">or</span> Blessed</h1>
-      <p class="text-muted" style="margin-top: 4px;">Tactical Esports Board Game</p>
+  <div id="app-root">
+
+    <!-- 1. MAIN MENU -->
+    <div id="main-menu">
+      <div style="text-align: center; margin-bottom: 6px;">
+        <h1 style="font-weight: 800; font-size: 1.9rem; color: var(--text-dark); letter-spacing: -0.03em;">
+          Brilliance <span style="color: var(--primary-orange);">or</span> Blessed
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">Tactical Esports Board Game</p>
+      </div>
+
+      <div class="hero-card">
+        <div class="input-group">
+          <label>NAMA HERO / NICKNAME</label>
+          <input type="text" id="input-name" class="input-field" placeholder="Contoh: Budi Trisetyo">
+        </div>
+        <div class="input-group">
+          <label>NOMOR HANDPHONE</label>
+          <input type="tel" id="input-phone" class="input-field" placeholder="08XXXXXXXXXX">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+          <button class="btn-action btn-orange" style="padding: 15px;" onclick="startMode('solo')">🎮 Solo Training</button>
+          <button class="btn-action btn-dark" style="padding: 15px;" onclick="startMode('multi')">⚔️ Ranked Match</button>
+        </div>
+      </div>
     </div>
 
-    <div class="menu-card">
-      <div>
-        <label class="text-muted" style="display:block; margin-bottom:6px; font-size:0.75rem;">HERO IDENTITY</label>
-        <input type="text" id="input-name" class="input-pro" placeholder="Nama Hero">
-      </div>
-      <div>
-        <label class="text-muted" style="display:block; margin-bottom:6px; font-size:0.75rem;">PHONE NUMBER</label>
-        <input type="text" id="input-phone" class="input-pro" placeholder="08XXXXXXXXXX">
-      </div>
+    <!-- 2. GAMEPLAY DASHBOARD -->
+    <div id="game-wrapper">
       
-      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
-        <button class="btn-pro" onclick="startMode('solo')">Solo Training</button>
-        <button class="btn-pro btn-ghost" onclick="startMode('multi')">Ranked Match</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. GAMEPLAY UI -->
-  <div id="game-wrapper">
-    <div id="sidebar">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <h2 id="player-title" style="font-size: 1.1rem;">Hero</h2>
-          <span class="text-muted" id="my-path">Pilih Jalur Arena</span>
-        </div>
-        <div style="text-align: right;">
-          <div class="text-gold" style="font-weight: 700; font-size: 1.1rem;"><span id="my-gold">1000</span> 💎</div>
-        </div>
-      </div>
-
-      <!-- TOP UP CARD -->
-      <div class="sidebar-card">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:0.8rem; font-weight:600;">Vault & Diamond</span>
-          <span class="text-muted" style="font-size:0.7rem;">Midtrans Active</span>
-        </div>
-        <button class="btn-pro btn-ghost" style="width:100%; padding:8px; font-size:0.8rem;" onclick="buyGold(10000, 5000)">Top Up +5.000 Diamond</button>
-      </div>
-
-      <!-- INVENTARIS SABOTASE -->
-      <div class="sidebar-card">
-        <span style="font-size:0.8rem; font-weight:600;">Inventory Sabotase</span>
-        <div id="inventory-list" style="display:flex; gap:6px; flex-wrap:wrap;">
-          <span class="text-muted" style="font-size:0.75rem;">Kosong</span>
-        </div>
-      </div>
-
-      <!-- TOKO SABOTASE -->
-      <div class="sidebar-card">
-        <span style="font-size:0.8rem; font-weight:600;">Toko Taktis</span>
-        <div style="display:flex; flex-direction:column; gap:8px; margin-top:4px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-            <span>🧊 Freeze Item</span>
-            <button class="btn-pro btn-ghost" style="padding:4px 10px; font-size:0.75rem;" onclick="buySabotage('FREEZE', 200)">200 💎</button>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-            <span>🔀 Swap Posisi</span>
-            <button class="btn-pro btn-ghost" style="padding:4px 10px; font-size:0.75rem;" onclick="buySabotage('SWAP', 350)">350 💎</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ROSTER PEMAIN & AKSI -->
-      <div class="sidebar-card" style="flex:1;">
-        <span style="font-size:0.8rem; font-weight:600;">Roster Lawan & Aksi</span>
-        <div id="player-list" style="display:flex; flex-direction:column; gap:8px; margin-top:6px;"></div>
-      </div>
-
-      <div id="turn-indicator" class="text-cyan" style="font-size:0.85rem; font-weight:600; text-align:center;">Connecting to arena...</div>
-    </div>
-
-    <!-- MAIN BOARD CANVAS AREA -->
-    <div id="game-container">
-      <canvas id="board-canvas" width="760" height="480"></canvas>
-
-      <!-- MODAL PILIH JALUR -->
-      <div class="modal-overlay" id="path-modal" style="display: flex;">
-        <div class="modal-card">
-          <h3>Pilih Strategi Jalur</h3>
-          <p class="text-muted">Setiap jalur menawarkan tantangan & keuntungan khusus di arena.</p>
-          <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
-            <button class="btn-pro" style="justify-content:flex-start; padding:14px;" onclick="selectPath('PINTAR')">
-              <div style="text-align:left;">
-                <div style="font-weight:700;">🧠 Jalur Pintar</div>
-                <div class="text-muted" style="font-size:0.75rem; color:#475569;">Fokus Trivia, Jawaban Benar Berhadiah Diamond</div>
+      <!-- KANAN / LEFT SIDEBAR PANEL -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <!-- HEADER PROFIL (ACUAN MODEL ACUAN FOTO) -->
+        <div class="profile-bar">
+          <div class="user-info">
+            <div class="avatar-box" id="avatar-initial">B</div>
+            <div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Selamat datang,</div>
+              <div style="font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
+                <span id="player-title">Budi Trisetyo</span>
+                <span class="badge-admin">PRO</span>
               </div>
-            </button>
-            <button class="btn-pro btn-ghost" style="justify-content:flex-start; padding:14px;" onclick="selectPath('BERUNTUNG')">
-              <div style="text-align:left;">
-                <div style="font-weight:700;">🎲 Jalur Beruntung</div>
-                <div class="text-muted" style="font-size:0.75rem;">Fokus Lucky Spin, Buff & Item Sabotase Gratiss</div>
-              </div>
-            </button>
+            </div>
+          </div>
+          <div class="points-badge" onclick="buyGold(10000, 5000)">
+            <span style="font-size: 0.95rem; font-weight: 800; color: #b45309;"><span id="my-gold">1000</span> 💎</span>
+            <span style="font-size: 0.65rem; color: #d97706; font-weight: 800;">K-Points ></span>
           </div>
         </div>
-      </div>
 
-      <!-- MODAL SPINNER -->
-      <div class="modal-overlay" id="wheel-modal">
-        <div class="modal-card">
-          <h3>Giliranmu Beraksi!</h3>
-          <p class="text-muted">Putar roda takdir untuk menentukan pergerakan hero kamu.</p>
-          <button class="btn-pro" onclick="spinWheel()" style="margin-top:8px; padding:12px;">Putar Roda</button>
+        <!-- TOMBOL AKSI CEPAT PAUSE / KELUAR -->
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-pause" class="btn-action btn-ghost" style="flex: 1; padding: 10px; font-size: 0.78rem; display: none;" onclick="togglePauseSolo()">⏸️ Pause</button>
+          <button class="btn-action btn-danger" style="flex: 1; padding: 10px; font-size: 0.78rem;" onclick="exitGame()">🚪 Keluar Arena</button>
         </div>
+
+        <!-- DUAL CARDS (STRATEGI & TOKO TAKTIS) -->
+        <div class="dual-cards">
+          <div class="card-item yellow">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 1.3rem;">🎁</span>
+              <span class="pill-tag tag-orange">🔥 1 Hari</span>
+            </div>
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 800;">Jalur Strategi</div>
+              <div style="font-size: 0.72rem; color: #059669; font-weight: 700; margin-top: 2px;" id="my-path">Pilih Jalur Arena</div>
+            </div>
+          </div>
+
+          <div class="card-item purple">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 1.3rem;">🎯</span>
+              <span class="pill-tag tag-purple">Toko Taktis</span>
+            </div>
+            <div>
+              <div style="font-size: 0.85rem; font-weight: 800;">Freeze Item</div>
+              <div style="font-size: 0.72rem; color: #7e22ce; font-weight: 700; margin-top: 2px; cursor: pointer;" onclick="buySabotage('FREEZE', 200)">Beli (200💎) ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASS HERO BANNER CARD -->
+        <div class="pass-banner">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.68rem; font-weight: 800; background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 12px; letter-spacing: 0.03em;">⚡ 20K CLUB PASS</span>
+            <span style="font-size: 0.75rem; font-weight: 700;">Mulai Rp9.900</span>
+          </div>
+          <div>
+            <h4 style="font-size: 1.05rem; font-weight: 800; line-height: 1.3;">Top Up Diamond Instant & Hemat Pass!</h4>
+            <p style="font-size: 0.73rem; opacity: 0.9; margin-top: 4px;">Akses buff khusus dan item sabotase tanpa batas di arena.</p>
+          </div>
+          <button class="btn-action btn-dark" style="width: 100%; padding: 12px;" onclick="buyGold(10000, 5000)">⚡ Beli Pass Sekarang</button>
+        </div>
+
+        <!-- ROSTER PEMAIN & TURNS -->
+        <div class="card-item" style="background: #ffffff; border: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.8rem; font-weight: 800;">Roster Lawan & Giliran</div>
+          <div id="player-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;"></div>
+          <div id="turn-indicator" style="font-size: 0.78rem; font-weight: 800; text-align: center; color: var(--primary-orange); margin-top: 8px;">
+            Connecting to arena...
+          </div>
+        </div>
+
       </div>
 
-      <!-- MODAL KUIS -->
-      <div class="modal-overlay" id="quiz-modal">
-        <div class="modal-card">
-          <h3>Tantangan Trivia</h3>
-          <p id="quiz-question" style="font-size:0.9rem; margin-top:4px;">Pertanyaan...</p>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;" id="quiz-options">
-            <button class="btn-pro btn-ghost" onclick="answerQuiz(0)" id="opt-0">A</button>
-            <button class="btn-pro btn-ghost" onclick="answerQuiz(1)" id="opt-1">B</button>
-            <button class="btn-pro btn-ghost" onclick="answerQuiz(2)" id="opt-2">C</button>
-            <button class="btn-pro btn-ghost" onclick="answerQuiz(3)" id="opt-3">D</button>
-          </div>
+      <!-- KIRI / BOARD CANVAS PANEL -->
+      <div class="canvas-card">
+        <canvas id="board-canvas" width="700" height="460"></canvas>
+      </div>
+
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="pause-modal">
+      <div class="modal-card">
+        <h2 style="font-weight: 800;">Game Di-Pause ⏸️</h2>
+        <p style="font-size: 0.82rem; color: var(--text-muted);">Permainan Solo Training dihentikan sementara.</p>
+        <button class="btn-action btn-orange" onclick="togglePauseSolo()">▶️ Lanjutkan Game</button>
+        <button class="btn-action btn-danger" onclick="exitGame()">🚪 Keluar Menu</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="path-modal">
+      <div class="modal-card">
+        <h3 style="font-weight: 800;">Pilih Jalur Strategi</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Setiap jalur memberikan keunggulan unik di arena.</p>
+        <button class="btn-action btn-dark" style="padding: 14px;" onclick="selectPath('PINTAR')">🧠 Jalur Pintar (Kuis Trivia)</button>
+        <button class="btn-action btn-orange" style="padding: 14px;" onclick="selectPath('BERUNTUNG')">🎲 Jalur Beruntung (Spin & Buff)</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="wheel-modal">
+      <div class="modal-card">
+        <h3 style="font-weight: 800;">Giliranmu Beraksi!</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Putar roda takdir untuk melangkah.</p>
+        <button class="btn-action btn-orange" style="padding: 14px;" onclick="spinWheel()">🎲 Putar Roda</button>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="quiz-modal">
+      <div class="modal-card">
+        <h3 style="font-weight: 800;">Tantangan Trivia</h3>
+        <p id="quiz-question" style="font-size: 0.85rem; color: var(--text-dark);">Pertanyaan...</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;" id="quiz-options">
+          <button class="btn-action btn-ghost" onclick="answerQuiz(0)" id="opt-0">A</button>
+          <button class="btn-action btn-ghost" onclick="answerQuiz(1)" id="opt-1">B</button>
+          <button class="btn-action btn-ghost" onclick="answerQuiz(2)" id="opt-2">C</button>
+          <button class="btn-action btn-ghost" onclick="answerQuiz(3)" id="opt-3">D</button>
         </div>
       </div>
     </div>
+
   </div>
 
   <script>
@@ -314,6 +371,8 @@
     let currentUser = null;
     let myPath = null;
     let myInventory = [];
+    let currentMode = 'solo';
+    let isPaused = false;
 
     function showToast(msg) {
       const container = document.getElementById('toast-container');
@@ -324,68 +383,67 @@
       setTimeout(() => toast.remove(), 2500);
     }
 
+    function adjustResponsiveLayout() {
+      const gameWrapper = document.getElementById('game-wrapper');
+      if (gameWrapper.style.display !== 'none') {
+        gameWrapper.style.display = (window.innerWidth >= 768 || window.innerHeight < 500) ? 'grid' : 'flex';
+      }
+    }
+
     function startMode(mode) {
       const name = document.getElementById('input-name').value.trim();
       const phone = document.getElementById('input-phone').value.trim();
 
       if (!name || !phone) {
-        showToast('Mohon lengkapi Nama Hero dan No. HP');
+        showToast('Lengkapi Nama Hero & No. HP');
         return;
       }
 
+      currentMode = mode;
       currentUser = { name, phone };
       document.getElementById('main-menu').style.display = 'none';
-      document.getElementById('game-wrapper').style.display = 'flex';
+      
+      const gameWrapper = document.getElementById('game-wrapper');
+      adjustResponsiveLayout();
+
       document.getElementById('player-title').innerText = name;
+      document.getElementById('avatar-initial').innerText = name.charAt(0).toUpperCase();
+
+      document.getElementById('btn-pause').style.display = (mode === 'solo') ? 'inline-flex' : 'none';
 
       const roomId = mode === 'solo' ? 'room_solo_' + (socket ? socket.id : Date.now()) : 'room_main';
-      if (socket) {
-        socket.emit('join_room', { roomId, phone, name, mode });
+      if (socket) socket.emit('join_room', { roomId, phone, name, mode });
+    }
+
+    function togglePauseSolo() {
+      if (currentMode !== 'solo') return;
+      isPaused = !isPaused;
+      document.getElementById('pause-modal').style.display = isPaused ? 'flex' : 'none';
+    }
+
+    function exitGame() {
+      if (confirm('Keluar ke Menu Utama?')) {
+        location.reload();
       }
     }
 
     function selectPath(pathType) {
       myPath = pathType;
-      document.getElementById('my-path').innerText = `Jalur ${pathType}`;
+      document.getElementById('my-path').innerText = `Jalur ${pathType} Selected`;
       document.getElementById('path-modal').style.display = 'none';
-      showToast(`Strategi dipilih: Jalur ${pathType}`);
       if (socket) socket.emit('select_path', { path: pathType });
     }
 
     function buySabotage(itemType, cost) {
       const currentGold = parseInt(document.getElementById('my-gold').innerText);
       if (currentGold < cost) {
-        showToast('Diamond tidak mencukupi');
+        showToast('Diamond tidak cukup');
         return;
       }
-
       myInventory.push(itemType);
-      updateInventoryUI();
       document.getElementById('my-gold').innerText = currentGold - cost;
-      showToast(`Item ${itemType} ditambahkan ke inventaris`);
+      showToast(`Item ${itemType} dibeli!`);
       if (socket) socket.emit('buy_sabotage', { itemType, cost });
-    }
-
-    function updateInventoryUI() {
-      const invContainer = document.getElementById('inventory-list');
-      if (myInventory.length === 0) {
-        invContainer.innerHTML = `<span class="text-muted" style="font-size:0.75rem;">Kosong</span>`;
-        return;
-      }
-      invContainer.innerHTML = myInventory.map(item => `<span class="badge-item">${item}</span>`).join('');
-    }
-
-    function useSabotageOnTarget(targetId, itemType) {
-      const index = myInventory.indexOf(itemType);
-      if (index === -1) {
-        showToast(`Beli item ${itemType} terlebih dahulu`);
-        return;
-      }
-
-      myInventory.splice(index, 1);
-      updateInventoryUI();
-      if (socket) socket.emit('req_use_sabotage', { targetId, itemId: itemType });
-      showToast(`Sabotase ${itemType} dikirim ke lawan`);
     }
 
     function spinWheel() {
@@ -412,23 +470,25 @@
             onSuccess: function() {
               const el = document.getElementById('my-gold');
               el.innerText = parseInt(el.innerText) + gold;
-              showToast('Top Up Diamond Berhasil');
+              showToast('Top Up Berhasil!');
             }
           });
         }
       } catch (err) {
-        showToast('Payment Sandbox Siap');
+        showToast('Midtrans Sandbox Ready');
       }
     }
 
     if (socket) {
       socket.on('room_state_update', (state) => {
+        if (isPaused) return;
         currentGameState = state;
         updateUI();
       });
 
       socket.on('wheel_spun', (data) => {
-        showToast(`Pergerakan Dadu: ${data.slotIndex + 1} Langkah`);
+        if (isPaused) return;
+        showToast(`Dadu: ${data.slotIndex + 1} Langkah`);
         if (data.triggerQuiz && data.quizPrompt) {
           document.getElementById('quiz-question').innerText = data.quizPrompt.question;
           data.quizPrompt.options.forEach((optText, idx) => {
@@ -437,32 +497,18 @@
           document.getElementById('quiz-modal').style.display = 'flex';
         }
       });
-
-      socket.on('quiz_result', (res) => showToast(res.message));
-      socket.on('sabotage_executed', (data) => showToast(data.effectSummary));
     }
 
     function updateUI() {
-      if (!currentGameState) return;
+      if (!currentGameState || isPaused) return;
       const list = document.getElementById('player-list');
       list.innerHTML = '';
 
       currentGameState.players.forEach(p => {
         const isMe = socket && p.id === socket.id;
         const div = document.createElement('div');
-        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.15); padding:8px 12px; border-radius:8px; border:1px solid var(--panel-border); font-size:0.8rem;";
-
-        let actionBtns = '';
-        if (!isMe && currentGameState.currentTurn === socket?.id) {
-          actionBtns = `
-            <div style="display:flex; gap:4px;">
-              <button class="btn-pro btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="useSabotageOnTarget('${p.id}', 'FREEZE')">ICE</button>
-              <button class="btn-pro btn-danger" style="padding:4px 8px; font-size:0.7rem;" onclick="useSabotageOnTarget('${p.id}', 'SWAP')">SWAP</button>
-            </div>
-          `;
-        }
-
-        div.innerHTML = `<div><div style="font-weight:600;">${p.name} ${isMe ? '(Kamu)' : ''}</div><div class="text-muted" style="font-size:0.7rem;">Kotak ${p.position + 1}</div></div>${actionBtns}`;
+        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:10px; font-size:0.75rem;";
+        div.innerHTML = `<span style="font-weight:700;">${p.name} ${isMe ? '(Kamu)' : ''}</span><span style="color:var(--text-muted); font-weight:600;">Kotak ${p.position + 1}</span>`;
         list.appendChild(div);
       });
 
@@ -471,64 +517,56 @@
         document.getElementById('path-modal').style.display = 'flex';
       } else if (currentGameState.currentTurn === socket?.id) {
         document.getElementById('wheel-modal').style.display = 'flex';
-        turnIndicator.innerText = `Giliranmu bertindak (${currentGameState.timeRemaining}s)`;
-        turnIndicator.className = "text-cyan";
+        turnIndicator.innerText = `Giliranmu (${currentGameState.timeRemaining}s)`;
       } else {
-        turnIndicator.innerText = `Menunggu giliran lawan (${currentGameState.timeRemaining}s)`;
-        turnIndicator.className = "text-muted";
+        turnIndicator.innerText = `Giliran lawan (${currentGameState.timeRemaining}s)`;
       }
     }
 
-    /* RENDER BOARD ELEGAN & MINIMALIS */
+    /* RENDER BOARD CANVAS */
     function renderBoard() {
       const canvas = document.getElementById('board-canvas');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Background Canvas
-      ctx.fillStyle = '#0b0f19';
+      ctx.fillStyle = '#f8fafc';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Render Kotak Arena
       for (let i = 0; i < 20; i++) {
-        const x = (i % 5) * 140 + 30;
-        const y = Math.floor(i / 5) * 100 + 30;
-
+        const x = (i % 5) * 130 + 20;
+        const y = Math.floor(i / 5) * 95 + 20;
         const isPintar = i % 2 === 0;
-        
-        // Style Kotak Modern
-        ctx.fillStyle = isPintar ? 'rgba(56, 189, 248, 0.05)' : 'rgba(245, 158, 11, 0.05)';
-        ctx.strokeStyle = isPintar ? 'rgba(56, 189, 248, 0.3)' : 'rgba(245, 158, 11, 0.3)';
-        ctx.lineWidth = 1;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = isPintar ? '#bae6fd' : '#fef08a';
+        ctx.lineWidth = 2;
 
         ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(x, y, 120, 75, 8);
-        else ctx.rect(x, y, 120, 75);
+        if (ctx.roundRect) ctx.roundRect(x, y, 110, 75, 14);
+        else ctx.rect(x, y, 110, 75);
         ctx.fill();
         ctx.stroke();
 
-        // Label Kotak
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = '600 12px Space Grotesk';
+        ctx.fillStyle = '#0f172a';
+        ctx.font = '800 12px Plus Jakarta Sans';
         ctx.fillText(`${i + 1}`, x + 12, y + 24);
 
-        ctx.fillStyle = isPintar ? '#38bdf8' : '#f59e0b';
-        ctx.font = '500 10px Plus Jakarta Sans';
-        ctx.fillText(isPintar ? 'Jalur Pintar' : 'Jalur Beruntung', x + 12, y + 45);
+        ctx.fillStyle = isPintar ? '#0284c7' : '#d97706';
+        ctx.font = '700 10px Plus Jakarta Sans';
+        ctx.fillText(isPintar ? 'Pintar' : 'Beruntung', x + 12, y + 45);
       }
 
-      // Render Biji / Pin Player
       if (currentGameState?.players) {
         currentGameState.players.forEach((p, idx) => {
-          const x = (p.position % 5) * 140 + 95;
-          const y = Math.floor(p.position / 5) * 100 + 68;
+          const x = (p.position % 5) * 130 + 85;
+          const y = Math.floor(p.position / 5) * 95 + 60;
 
           ctx.beginPath();
-          ctx.arc(x, y, 10, 0, Math.PI * 2);
-          ctx.fillStyle = idx === 0 ? '#38bdf8' : '#f43f5e';
+          ctx.arc(x, y, 11, 0, Math.PI * 2);
+          ctx.fillStyle = idx === 0 ? '#ff6b00' : '#0284c7';
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.5;
           ctx.stroke();
         });
       }
@@ -539,6 +577,9 @@
       requestAnimationFrame(gameLoop);
     }
     requestAnimationFrame(gameLoop);
+
+    window.addEventListener('resize', adjustResponsiveLayout);
+    window.addEventListener('orientationchange', () => setTimeout(adjustResponsiveLayout, 200));
   </script>
 </body>
 </html>
