@@ -6,7 +6,6 @@
   <title>Brilliance or Blessed — Esports Tactical Arena</title>
   
   <script src="/socket.io/socket.io.js"></script>
-  <script type="text/javascript" src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="SB-Mid-client-YOUR_CLIENT_KEY"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,177 +13,65 @@
 
   <style>
     :root {
-      --bg-app: #f8fafc;
+      --bg-app: #f1f5f9;
       --card-bg: #ffffff;
       --text-dark: #0f172a;
       --text-muted: #64748b;
       --primary-orange: #ff6b00;
       --orange-gradient: linear-gradient(135deg, #ff7a00 0%, #ee5100 100%);
-      --yellow-card: #fff9e6;
-      --yellow-border: #fef08a;
-      --purple-card: #f5eeff;
-      --purple-border: #e9d5ff;
-      --border-subtle: #f1f5f9;
-      --radius-xl: 24px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.04), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
       --font-main: 'Plus Jakarta Sans', sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); -webkit-tap-highlight-color: transparent; }
-    
-    body {
-      background-color: var(--bg-app);
-      color: var(--text-dark);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      overflow-x: hidden;
-    }
+    body { background-color: var(--bg-app); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; }
 
-    #app-root {
-      width: 100%;
-      max-width: 480px;
-      min-height: 100vh;
-      background: var(--bg-app);
-      display: flex;
-      flex-direction: column;
-      position: relative;
-      padding: 18px;
-      gap: 16px;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
+    #app-root { width: 100%; max-width: 1040px; min-height: 100vh; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
 
-    .btn-action {
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 12px 18px;
-      font-weight: 700;
-      font-size: 0.88rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
+    .top-navbar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 12px 20px; border-radius: var(--radius-xl); box-shadow: var(--shadow-soft); }
+    .nav-tabs { display: flex; gap: 8px; }
+    .tab-btn { background: transparent; border: none; padding: 8px 16px; font-weight: 700; font-size: 0.82rem; border-radius: var(--radius-md); cursor: pointer; color: var(--text-muted); transition: all 0.2s; }
+    .tab-btn.active { background: #f8fafc; color: var(--primary-orange); box-shadow: inset 0 0 0 1.5px var(--primary-orange); }
+
+    .btn-action { border: none; border-radius: var(--radius-md); padding: 12px 18px; font-weight: 700; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.15s; }
     .btn-action:active { transform: scale(0.96); }
-    .btn-orange { background: var(--orange-gradient); color: #ffffff; box-shadow: 0 8px 20px -4px rgba(255, 107, 0, 0.4); }
+    .btn-orange { background: var(--orange-gradient); color: #ffffff; box-shadow: 0 6px 16px -4px rgba(255, 107, 0, 0.4); }
     .btn-dark { background: #0f172a; color: #ffffff; }
-    .btn-ghost { background: var(--card-bg); border: 1px solid var(--border-subtle); color: var(--text-dark); }
+    .btn-ghost { background: #f8fafc; border: 1px solid #e2e8f0; color: var(--text-dark); }
     .btn-danger { background: #fee2e2; color: #dc2626; }
 
-    #toast-container { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; width: 90%; max-width: 380px; }
-    .toast {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 12px 18px;
-      border-radius: var(--radius-md);
-      font-size: 0.85rem;
-      font-weight: 700;
-      text-align: center;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
-      animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -15px); } to { opacity: 1; transform: translate(-50%, 0); } }
-
-    /* MENU UTAMA */
-    #main-menu { display: flex; flex-direction: column; gap: 20px; justify-content: center; min-height: 85vh; }
-    .hero-card {
-      background: var(--card-bg);
-      border-radius: var(--radius-xl);
-      padding: 28px 24px;
-      box-shadow: var(--shadow-soft);
-      display: flex; flex-direction: column; gap: 16px;
-      border: 1px solid var(--border-subtle);
-    }
-    .input-group label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 6px; letter-spacing: 0.03em; }
-    .input-field {
-      width: 100%; padding: 14px 16px; border-radius: var(--radius-md); border: 1.5px solid #e2e8f0;
-      background: #f8fafc; font-size: 0.95rem; font-weight: 600; outline: none; transition: border-color 0.2s;
-    }
-    .input-field:focus { border-color: var(--primary-orange); background: #ffffff; }
-
-    /* DASHBOARD GAMEPLAY */
-    #game-wrapper { display: none; flex-direction: column; gap: 16px; width: 100%; }
-    .profile-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: var(--card-bg); padding: 12px 16px; border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-soft); border: 1px solid var(--border-subtle);
-    }
-    .user-info { display: flex; align-items: center; gap: 12px; }
-    .avatar-box {
-      width: 48px; height: 48px; border-radius: 50%; background: #fed7aa;
-      display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: #c2410c;
-      border: 2px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    }
-    .badge-admin { background: #fef3c7; color: #d97706; font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 8px; }
-    .points-badge {
-      background: #fffbe3; border: 1px solid #fef08a; padding: 6px 14px; border-radius: var(--radius-lg);
-      display: flex; flex-direction: column; align-items: flex-end; cursor: pointer; transition: transform 0.2s;
-    }
-    .points-badge:active { transform: scale(0.95); }
-
-    .dual-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .card-item {
-      border-radius: var(--radius-lg); padding: 16px;
-      display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden;
-      box-shadow: var(--shadow-soft);
-    }
-    .card-item.yellow { background: var(--yellow-card); border: 1px solid var(--yellow-border); }
-    .card-item.purple { background: var(--purple-card); border: 1px solid var(--purple-border); }
+    .card-panel { background: var(--card-bg); border-radius: var(--radius-xl); padding: 24px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; gap: 14px; }
     
-    .pill-tag { font-size: 0.68rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; width: fit-content; }
-    .tag-orange { background: #ffedd5; color: #c2410c; }
-    .tag-purple { background: #f3e8ff; color: #7e22ce; }
+    .input-group label { font-size: 0.72rem; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .input-field { width: 100%; padding: 12px 14px; border-radius: var(--radius-md); border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 0.9rem; font-weight: 600; outline: none; }
+    .input-field:focus { border-color: var(--primary-orange); background: #fff; }
 
-    .inventory-bar {
-      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;
-    }
-    .item-chip {
-      background: #7e22ce; color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; font-weight: 800;
-      cursor: pointer; display: flex; align-items: center; gap: 4px; transition: transform 0.15s;
-    }
-    .item-chip:active { transform: scale(0.92); }
+    .avatar-preview-box { display: flex; align-items: center; gap: 14px; background: #f8fafc; padding: 12px; border-radius: var(--radius-lg); }
+    .avatar-circle { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; color: #fff; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-    .pass-banner {
-      background: var(--orange-gradient); border-radius: var(--radius-xl); padding: 22px; color: #ffffff;
-      display: flex; flex-direction: column; gap: 12px; box-shadow: 0 12px 28px -6px rgba(255, 107, 0, 0.45); position: relative; overflow: hidden;
-    }
+    #auth-section { display: flex; justify-content: center; align-items: center; min-height: 70vh; }
+    #menu-section { display: none; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    #game-wrapper { display: none; grid-template-columns: 320px 1fr; gap: 16px; width: 100%; }
+    #admin-section { display: none; flex-direction: column; gap: 16px; }
 
-    .canvas-card {
-      background: var(--card-bg); border-radius: var(--radius-xl); padding: 14px;
-      border: 1px solid var(--border-subtle); box-shadow: var(--shadow-soft);
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
-    }
+    @media (max-width: 768px) { #game-wrapper { grid-template-columns: 1fr; } }
+
+    .canvas-card { background: var(--card-bg); border-radius: var(--radius-xl); padding: 14px; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; }
     canvas { border-radius: var(--radius-lg); max-width: 100%; height: auto; background: #f8fafc; }
 
-    .taunt-bar { display: flex; gap: 8px; justify-content: center; margin-top: 6px; }
-    .btn-taunt { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; font-size: 1.1rem; cursor: pointer; }
+    .table-responsive { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8rem; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
+    th { background: #f8fafc; font-weight: 800; color: var(--text-muted); }
 
-    /* MODALS */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);
-      display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px;
-    }
-    .modal-card {
-      background: var(--card-bg); border-radius: var(--radius-xl); padding: 26px; width: 100%; max-width: 380px;
-      display: flex; flex-direction: column; gap: 16px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
+    .modal-card { background: var(--card-bg); border-radius: var(--radius-xl); padding: 24px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
 
-    .timer-progress {
-      width: 100%; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; margin-top: 4px;
-    }
-    .timer-fill { height: 100%; background: var(--primary-orange); width: 100%; transition: width 0.2s linear; }
-
-    @media (min-width: 768px), (orientation: landscape) and (max-height: 500px) {
-      #app-root { max-width: 1040px; padding: 24px; }
-      #game-wrapper { display: none; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
-      .canvas-card { height: 100%; justify-content: center; }
-    }
+    #toast-container { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 8px; width: 90%; max-width: 360px; }
+    .toast { background: #0f172a; color: #fff; padding: 10px 16px; border-radius: var(--radius-md); font-size: 0.82rem; font-weight: 700; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
   </style>
 </head>
 <body>
@@ -193,143 +80,220 @@
 
   <div id="app-root">
 
-    <!-- 1. MAIN MENU -->
-    <div id="main-menu">
-      <div style="text-align: center; margin-bottom: 6px;">
-        <h1 style="font-weight: 800; font-size: 1.9rem; color: var(--text-dark); letter-spacing: -0.03em;">
-          Brilliance <span style="color: var(--primary-orange);">or</span> Blessed
-        </h1>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">Tactical Esports Board Game</p>
+    <div class="top-navbar">
+      <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-dark);">
+        Brilliance <span style="color: var(--primary-orange);">or</span> Blessed
       </div>
+      <div class="nav-tabs">
+        <button class="tab-btn active" id="tab-player-btn" onclick="switchTab('player')">🎮 Pemain</button>
+        <button class="tab-btn" id="tab-admin-btn" onclick="switchTab('admin')">🛡️ Panel Admin</button>
+      </div>
+    </div>
 
-      <div class="hero-card">
-        <div class="input-group">
-          <label>NAMA HERO / NICKNAME</label>
-          <input type="text" id="input-name" class="input-field" placeholder="Contoh: Budi Trisetyo">
-        </div>
-        <div class="input-group">
-          <label>NOMOR HANDPHONE</label>
-          <input type="tel" id="input-phone" class="input-field" placeholder="08XXXXXXXXXX">
+    <!-- 1. OTENTIKASI PEMAIN (DAFTAR / LOGIN) -->
+    <div id="auth-section">
+      <div class="card-panel" style="width: 100%; max-width: 420px;">
+        <div style="display: flex; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 10px;">
+          <button class="tab-btn active" id="auth-tab-login" onclick="setAuthMode('login')" style="flex: 1;">Masuk / Login</button>
+          <button class="tab-btn" id="auth-tab-register" onclick="setAuthMode('register')" style="flex: 1;">Daftar Akun Baru</button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
-          <button class="btn-action btn-orange" style="padding: 15px;" onclick="startMode('solo')">🎮 Solo Training</button>
-          <button class="btn-action btn-dark" style="padding: 15px;" onclick="startMode('multi')">⚔️ Ranked Match</button>
+        <!-- FORM LOGIN -->
+        <div id="form-login" style="display: flex; flex-direction: column; gap: 12px;">
+          <h3 style="font-weight: 800;">Masuk Arena</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Masukkan nomor HP terdaftar untuk melanjutkan.</p>
+          <div class="input-group">
+            <label>NOMOR HANDPHONE</label>
+            <input type="tel" id="login-phone-input" class="input-field" placeholder="Contoh: 08123456789">
+          </div>
+          <button class="btn-action btn-orange" onclick="submitLogin()">🎮 Masuk Game</button>
+        </div>
+
+        <!-- FORM REGISTRASI -->
+        <div id="form-register" style="display: none; flex-direction: column; gap: 12px;">
+          <h3 style="font-weight: 800;">Pendaftaran Pemain Baru</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Isi data diri untuk menyimpan akun kamu di server.</p>
+          <div class="input-group">
+            <label>NAMA HERO / NICKNAME</label>
+            <input type="text" id="reg-name-input" class="input-field" placeholder="Contoh: Budi Trisetyo">
+          </div>
+          <div class="input-group">
+            <label>NOMOR HANDPHONE</label>
+            <input type="tel" id="reg-phone-input" class="input-field" placeholder="Contoh: 08123456789">
+          </div>
+          <div class="input-group">
+            <label>WARNA AVATAR KESUKAAN</label>
+            <input type="color" id="reg-color-input" value="#ff6b00" style="width: 100%; height: 40px; border: none; cursor: pointer;">
+          </div>
+          <button class="btn-action btn-orange" onclick="submitRegister()">📝 Daftar Akun Server</button>
         </div>
       </div>
     </div>
 
-    <!-- 2. GAMEPLAY DASHBOARD -->
-    <div id="game-wrapper">
-      
-      <!-- LEFT PANEL -->
-      <div style="display: flex; flex-direction: column; gap: 14px;">
+    <!-- 2. MENU UTAMA (LOBBY PLAYER) -->
+    <div id="menu-section">
+      <div class="card-panel">
+        <h3 style="font-weight: 800;">Masuk Arena Pertandingan</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Pilih mode permainan dan persiapkan strategimu.</p>
         
-        <div class="profile-bar">
-          <div class="user-info">
-            <div class="avatar-box" id="avatar-initial">B</div>
-            <div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">Selamat datang,</div>
-              <div style="font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
-                <span id="player-title">Budi Trisetyo</span>
-                <span class="badge-admin">PRO</span>
-              </div>
-            </div>
-          </div>
-          <div class="points-badge" onclick="buyGold(10000, 5000)">
-            <span style="font-size: 0.95rem; font-weight: 800; color: #b45309;"><span id="my-gold">1000</span> 💎</span>
-            <span style="font-size: 0.65rem; color: #d97706; font-weight: 800;">K-Points ></span>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 8px;">
-          <button id="btn-pause" class="btn-action btn-ghost" style="flex: 1; padding: 10px; font-size: 0.78rem; display: none;" onclick="togglePauseSolo()">⏸️ Pause</button>
-          <button class="btn-action btn-danger" style="flex: 1; padding: 10px; font-size: 0.78rem;" onclick="exitGame()">🚪 Keluar Arena</button>
-        </div>
-
-        <div class="dual-cards">
-          <div class="card-item yellow">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 1.3rem;">🎁</span>
-              <span class="pill-tag tag-orange">🔥 Active</span>
-            </div>
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 800;">Jalur Strategi</div>
-              <div style="font-size: 0.72rem; color: #059669; font-weight: 700; margin-top: 2px;" id="my-path">Pilih Jalur Arena</div>
-            </div>
-          </div>
-
-          <div class="card-item purple">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 1.3rem;">🎯</span>
-              <span class="pill-tag tag-purple">Toko Taktis</span>
-            </div>
-            <div>
-              <div style="font-size: 0.85rem; font-weight: 800;">Freeze Item</div>
-              <div style="font-size: 0.72rem; color: #7e22ce; font-weight: 700; margin-top: 2px; cursor: pointer;" onclick="buySabotage('FREEZE', 200)">Beli (200💎) ></div>
-            </div>
-            <div class="inventory-bar" id="inventory-list"></div>
-          </div>
-        </div>
-
-        <div class="pass-banner">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.68rem; font-weight: 800; background: rgba(255,255,255,0.25); padding: 4px 10px; border-radius: 12px;">⚡ 20K CLUB PASS</span>
-            <span style="font-size: 0.75rem; font-weight: 700;">Rp9.900</span>
-          </div>
+        <div class="avatar-preview-box">
+          <div class="avatar-circle" id="menu-avatar-display" style="background: #ff6b00;">B</div>
           <div>
-            <h4 style="font-size: 1.05rem; font-weight: 800;">Top Up Diamond Instant!</h4>
-            <p style="font-size: 0.73rem; opacity: 0.9; margin-top: 4px;">Dapatkan item sabotase eksklusif untuk melumpuhkan lawan.</p>
+            <div style="font-weight: 800; font-size: 0.95rem;" id="menu-player-name">Player Name</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);" id="menu-player-phone">08123456789</div>
           </div>
-          <button class="btn-action btn-dark" style="width: 100%; padding: 12px;" onclick="buyGold(10000, 5000)">⚡ Beli Pass</button>
+          <button class="btn-action btn-ghost" style="margin-left: auto; padding: 6px 10px; font-size: 0.75rem;" onclick="logoutPlayer()">🚪 Keluar</button>
         </div>
 
-        <div class="card-item" style="background: #ffffff; border: 1px solid var(--border-subtle);">
-          <div style="font-size: 0.8rem; font-weight: 800;">Roster Lawan & Giliran</div>
-          <div id="player-list" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;"></div>
-          <div id="turn-indicator" style="font-size: 0.78rem; font-weight: 800; text-align: center; color: var(--primary-orange); margin-top: 8px;">
-            Connecting to arena...
-          </div>
-          
-          <div style="margin-top: 8px; border-top: 1px dashed var(--border-subtle); padding-top: 6px;">
-            <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-align: center; margin-bottom: 4px;">Kirim Emote Taktis</div>
-            <div class="taunt-bar">
-              <button class="btn-taunt" onclick="sendTaunt('🔥')">🔥</button>
-              <button class="btn-taunt" onclick="sendTaunt('😂')">😂</button>
-              <button class="btn-taunt" onclick="sendTaunt('🎯')">🎯</button>
-              <button class="btn-taunt" onclick="sendTaunt('💣')">💣</button>
-            </div>
-          </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+          <button class="btn-action btn-orange" style="padding: 14px;" onclick="startMode('solo')">🎮 Solo Training (vs AI Bot)</button>
+          <button class="btn-action btn-dark" style="padding: 14px;" onclick="startMode('multi')">⚔️ Ranked Match Online</button>
         </div>
-
       </div>
 
-      <!-- BOARD CANVAS -->
+      <div class="card-panel">
+        <h3 style="font-weight: 800;">Dompet & K-Points</h3>
+        <div style="background: #fffbe3; border: 1px solid #fef08a; padding: 16px; border-radius: var(--radius-lg); display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 0.72rem; font-weight: 700; color: #b45309;">SALDO K-POINTS / DIAMOND</div>
+            <div style="font-size: 1.4rem; font-weight: 800; color: #78350f;"><span id="lobby-gold-display">1000</span> 💎</div>
+          </div>
+          <button class="btn-action btn-orange" style="padding: 8px 14px; font-size: 0.78rem;" onclick="openTopUpModal()">⚡ Isi Saldo</button>
+        </div>
+
+        <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.4;">
+          <strong>Status Server:</strong><br>
+          • Akun kamu sudah tersimpan di server resmi.<br>
+          • Pilihan Jalur Strategi (Pintar/Beruntung) akan ditentukan saat kamu resmi memasuki arena bertanding.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. GAMEPLAY DASHBOARD ARENA -->
+    <div id="game-wrapper">
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="card-panel" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="avatar-circle" id="game-avatar-display" style="width: 40px; height: 40px; font-size: 1rem; background: #ff6b00;">B</div>
+              <div>
+                <div style="font-weight: 800; font-size: 0.88rem;" id="game-player-name">Player</div>
+                <div style="font-size: 0.7rem; color: #059669; font-weight: 700;" id="game-path-display">Pilih Jalur Arena</div>
+              </div>
+            </div>
+            <div style="font-size: 0.9rem; font-weight: 800; color: #b45309;"><span id="game-gold-display">1000</span> 💎</div>
+          </div>
+        </div>
+
+        <div class="card-panel" style="padding: 16px;">
+          <div style="font-size: 0.8rem; font-weight: 800; margin-bottom: 8px;">Pemain & Status Giliran</div>
+          <div id="player-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+          <div id="turn-indicator" style="font-size: 0.8rem; font-weight: 800; text-align: center; color: var(--primary-orange); margin-top: 10px;">
+            Menyiapkan arena pertandingan...
+          </div>
+        </div>
+
+        <div class="card-panel" style="padding: 16px;">
+          <div style="font-size: 0.78rem; font-weight: 800; margin-bottom: 6px;">Toko Sabotage Taktis</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f3e8ff; padding: 10px; border-radius: 10px;">
+            <span style="font-size: 0.78rem; font-weight: 700; color: #6b21a8;">❄️ Freeze Item (200💎)</span>
+            <button class="btn-action btn-dark" style="padding: 6px 10px; font-size: 0.72rem;" onclick="buySabotage('FREEZE', 200)">Beli</button>
+          </div>
+        </div>
+
+        <button class="btn-action btn-danger" style="padding: 10px;" onclick="exitGame()">🚪 Keluar Arena</button>
+      </div>
+
       <div class="canvas-card">
         <canvas id="board-canvas" width="700" height="460"></canvas>
       </div>
-
     </div>
 
-    <!-- MODALS -->
-    <div class="modal-overlay" id="pause-modal">
-      <div class="modal-card">
-        <h2 style="font-weight: 800;">Game Di-Pause ⏸️</h2>
-        <p style="font-size: 0.82rem; color: var(--text-muted);">Permainan Solo Training dihentikan sementara.</p>
-        <button class="btn-action btn-orange" onclick="togglePauseSolo()">▶️ Lanjutkan Game</button>
-        <button class="btn-action btn-danger" onclick="exitGame()">🚪 Keluar Menu</button>
+    <!-- 4. PANEL ADMIN -->
+    <div id="admin-section">
+      <div class="card-panel" id="admin-login-box">
+        <h3 style="font-weight: 800;">Login Panel Admin</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Masukkan Kode Akses Khusus Admin.</p>
+        <div class="input-group">
+          <label>KODE AKSES ADMIN</label>
+          <input type="password" id="admin-pass-input" class="input-field" placeholder="Masukkan Kode Admin (Default: admin123)">
+        </div>
+        <button class="btn-action btn-dark" onclick="loginAdmin()">🔑 Masuk Panel Admin</button>
+      </div>
+
+      <div id="admin-dashboard" style="display: none; flex-direction: column; gap: 16px;">
+        <div class="card-panel">
+          <h3 style="font-weight: 800;">Database Pemain Terdaftar Server</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>NAMA HERO</th>
+                  <th>NO. HANDPHONE</th>
+                  <th>SALDO K-POINTS</th>
+                  <th>STATUS</th>
+                  <th>AKSI</th>
+                </tr>
+              </thead>
+              <tbody id="admin-player-table"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3 style="font-weight: 800;">Pengaturan Metode Pembayaran</h3>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">Atur rekening Bank atau QRIS yang akan tampil di aplikasi.</p>
+
+          <div class="input-group">
+            <label>NAMA BANK / PEMBAYARAN</label>
+            <input type="text" id="pay-bank-name" class="input-field" placeholder="Contoh: Bank BCA / Mandiri / QRIS">
+          </div>
+
+          <div class="input-group">
+            <label>NOMOR REKENING / ID QRIS</label>
+            <input type="text" id="pay-account-num" class="input-field" placeholder="Contoh: 1234567890 a.n PT Esports Arena">
+          </div>
+
+          <div class="input-group">
+            <label>URL GAMBAR QRIS (OPSIONAL)</label>
+            <input type="text" id="pay-qris-url" class="input-field" placeholder="https://link-gambar-qris.com/qris.jpg">
+          </div>
+
+          <button class="btn-action btn-orange" onclick="savePaymentSettings()">💾 Simpan Pengaturan</button>
+        </div>
       </div>
     </div>
 
+    <!-- MODAL JALUR STRATEGI -->
     <div class="modal-overlay" id="path-modal">
       <div class="modal-card">
-        <h3 style="font-weight: 800;">Pilih Jalur Strategi</h3>
-        <p style="font-size: 0.8rem; color: var(--text-muted);">Pilih keunggulan taktis dalam laga ini.</p>
-        <button class="btn-action btn-dark" style="padding: 14px;" onclick="selectPath('PINTAR')">🧠 Jalur Pintar (Bonus Kuis)</button>
-        <button class="btn-action btn-orange" style="padding: 14px;" onclick="selectPath('BERUNTUNG')">🎲 Jalur Beruntung (Bonus Spin)</button>
+        <h3 style="font-weight: 800;">Laga Dimulai! Pilih Jalur Strategi</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Pilih jenis peruntungan taktis kamu di arena ini:</p>
+        <button class="btn-action btn-dark" style="padding: 14px;" onclick="selectPath('PINTAR')">🧠 Jalur Pintar (Kuis Trivia & Poin)</button>
+        <button class="btn-action btn-orange" style="padding: 14px;" onclick="selectPath('BERUNTUNG')">🎲 Jalur Beruntung (Bonus Spin & Buff Step)</button>
       </div>
     </div>
 
+    <!-- MODAL TOP UP -->
+    <div class="modal-overlay" id="topup-modal">
+      <div class="modal-card">
+        <h3 style="font-weight: 800;">Top Up K-Points</h3>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Transfer sesuai metode pembayaran resmi Admin:</p>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: var(--radius-md); text-align: left; font-size: 0.8rem;">
+          <div style="font-weight: 800; color: var(--primary-orange);" id="topup-bank-display">Bank BCA</div>
+          <div style="font-size: 0.95rem; font-weight: 800; margin-top: 2px;" id="topup-num-display">1234567890</div>
+          <div id="topup-qris-container" style="margin-top: 8px; display: none; text-align: center;">
+            <img id="topup-qris-img" src="" style="max-width: 180px; border-radius: 8px; border: 1px solid #ccc;">
+          </div>
+        </div>
+
+        <button class="btn-action btn-orange" onclick="confirmTopUp()">⚡ Konfirmasi Top Up Instant</button>
+        <button class="btn-action btn-ghost" onclick="closeModal('topup-modal')">Tutup</button>
+      </div>
+    </div>
+
+    <!-- MODAL WHEEL SPIN -->
     <div class="modal-overlay" id="wheel-modal">
       <div class="modal-card">
         <h3 style="font-weight: 800;">Giliranmu Beraksi!</h3>
@@ -338,29 +302,17 @@
       </div>
     </div>
 
+    <!-- MODAL QUIZ -->
     <div class="modal-overlay" id="quiz-modal">
       <div class="modal-card">
         <h3 style="font-weight: 800;">Tantangan Trivia</h3>
         <p id="quiz-question" style="font-size: 0.85rem; color: var(--text-dark);">Pertanyaan...</p>
-        <div class="timer-progress">
-          <div id="quiz-timer-fill" class="timer-fill"></div>
-        </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;" id="quiz-options">
           <button class="btn-action btn-ghost" onclick="answerQuiz(0)" id="opt-0">A</button>
           <button class="btn-action btn-ghost" onclick="answerQuiz(1)" id="opt-1">B</button>
           <button class="btn-action btn-ghost" onclick="answerQuiz(2)" id="opt-2">C</button>
           <button class="btn-action btn-ghost" onclick="answerQuiz(3)" id="opt-3">D</button>
         </div>
-      </div>
-    </div>
-
-    <!-- MODAL LAYAR KEMENANGAN -->
-    <div class="modal-overlay" id="victory-modal">
-      <div class="modal-card">
-        <h2 style="font-weight: 800; color: var(--primary-orange);" id="victory-title">👑 VICTORY!</h2>
-        <p id="victory-subtitle" style="font-size: 0.85rem; color: var(--text-dark); font-weight: 700;"></p>
-        <div id="victory-rankings" style="display: flex; flex-direction: column; gap: 6px; text-align: left; font-size: 0.8rem;"></div>
-        <button class="btn-action btn-orange" style="padding: 14px; margin-top: 10px;" onclick="exitGame()">🎮 Kembali ke Menu Utama</button>
       </div>
     </div>
 
@@ -372,60 +324,10 @@
       : 'https://brillianceorblessed-production.up.railway.app';
 
     const socket = (typeof io !== 'undefined') ? io(SOCKET_URL) : null;
-    let currentGameState = null;
     let currentUser = null;
+    let currentGameState = null;
     let myPath = null;
-    let myInventory = [];
-    let currentMode = 'solo';
-    let isPaused = false;
-    let lastTurnId = null;
     let hasSpunThisTurn = false;
-    let playerRenderPos = {};
-
-    /* AUDIO SYNTHESIZER (AUDIO CONTEXT) */
-    const SoundFX = {
-      ctx: null,
-      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
-      playRoll() {
-        this.init();
-        const osc = this.ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.15);
-        osc.connect(this.ctx.destination);
-        osc.start(); osc.stop(this.ctx.currentTime + 0.15);
-      },
-      playWin() {
-        this.init();
-        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.2, this.ctx.currentTime + i * 0.1);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.1 + 0.4);
-          osc.connect(gain); gain.connect(this.ctx.destination);
-          osc.start(this.ctx.currentTime + i * 0.1);
-          osc.stop(this.ctx.currentTime + i * 0.1 + 0.4);
-        });
-      },
-      playCorrect() {
-        this.init();
-        const osc = this.ctx.createOscillator();
-        osc.frequency.setValueAtTime(587.33, this.ctx.currentTime);
-        osc.frequency.setValueAtTime(880, this.ctx.currentTime + 0.1);
-        osc.connect(this.ctx.destination);
-        osc.start(); osc.stop(this.ctx.currentTime + 0.25);
-      },
-      playWrong() {
-        this.init();
-        const osc = this.ctx.createOscillator();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, this.ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(110, this.ctx.currentTime + 0.2);
-        osc.connect(this.ctx.destination);
-        osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-      }
-    };
 
     function showToast(msg) {
       const container = document.getElementById('toast-container');
@@ -437,212 +339,251 @@
       setTimeout(() => toast.remove(), 2500);
     }
 
-    function adjustResponsiveLayout() {
-      const gameWrapper = document.getElementById('game-wrapper');
-      if (gameWrapper.style.display !== 'none') {
-        gameWrapper.style.display = (window.innerWidth >= 768 || window.innerHeight < 500) ? 'grid' : 'flex';
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function switchTab(tab) {
+      document.getElementById('tab-player-btn').classList.toggle('active', tab === 'player');
+      document.getElementById('tab-admin-btn').classList.toggle('active', tab === 'admin');
+      
+      if (tab === 'player') {
+        document.getElementById('admin-section').style.display = 'none';
+        if (currentUser) {
+          document.getElementById('auth-section').style.display = 'none';
+          document.getElementById('menu-section').style.display = 'grid';
+        } else {
+          document.getElementById('auth-section').style.display = 'flex';
+          document.getElementById('menu-section').style.display = 'none';
+        }
+      } else {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'none';
+        document.getElementById('game-wrapper').style.display = 'none';
+        document.getElementById('admin-section').style.display = 'flex';
       }
     }
 
-    function startMode(mode) {
-      const name = document.getElementById('input-name').value.trim();
-      const phone = document.getElementById('input-phone').value.trim();
+    function setAuthMode(mode) {
+      document.getElementById('auth-tab-login').classList.toggle('active', mode === 'login');
+      document.getElementById('auth-tab-register').classList.toggle('active', mode === 'register');
+      document.getElementById('form-login').style.display = mode === 'login' ? 'flex' : 'none';
+      document.getElementById('form-register').style.display = mode === 'register' ? 'flex' : 'none';
+    }
+
+    /* SISTEM DAFTAR & LOGIN */
+    function submitRegister() {
+      const name = document.getElementById('reg-name-input').value.trim();
+      const phone = document.getElementById('reg-phone-input').value.trim();
+      const color = document.getElementById('reg-color-input').value;
 
       if (!name || !phone) {
-        showToast('Lengkapi Nama Hero & No. HP');
+        showToast('Nama dan Nomor HP wajib diisi!');
         return;
       }
 
-      currentMode = mode;
-      currentUser = { name, phone };
-      document.getElementById('main-menu').style.display = 'none';
-      
-      const gameWrapper = document.getElementById('game-wrapper');
-      adjustResponsiveLayout();
-
-      document.getElementById('player-title').innerText = name;
-      document.getElementById('avatar-initial').innerText = name.charAt(0).toUpperCase();
-      document.getElementById('btn-pause').style.display = (mode === 'solo') ? 'inline-flex' : 'none';
-
-      const roomId = mode === 'solo' ? 'room_solo_' + (socket ? socket.id : Date.now()) : 'room_main';
-      if (socket) socket.emit('join_room', { roomId, phone, name, mode });
+      if (socket) {
+        socket.emit('player_register', { name, phone, color });
+      }
     }
 
-    function togglePauseSolo() {
-      if (currentMode !== 'solo') return;
-      isPaused = !isPaused;
-      document.getElementById('pause-modal').style.display = isPaused ? 'flex' : 'none';
+    function submitLogin() {
+      const phone = document.getElementById('login-phone-input').value.trim();
+      if (!phone) {
+        showToast('Masukkan nomor HP kamu!');
+        return;
+      }
+
+      if (socket) {
+        socket.emit('player_login', { phone });
+      }
+    }
+
+    function logoutPlayer() {
+      currentUser = null;
+      document.getElementById('menu-section').style.display = 'none';
+      document.getElementById('auth-section').style.display = 'flex';
+      showToast('Berhasil keluar akun');
+    }
+
+    /* ARENA & GAMEPLAY */
+    function startMode(mode) {
+      if (!currentUser) return;
+      document.getElementById('menu-section').style.display = 'none';
+      document.getElementById('game-wrapper').style.display = 'grid';
+
+      document.getElementById('game-player-name').innerText = currentUser.name;
+      document.getElementById('game-avatar-display').innerText = currentUser.name.charAt(0).toUpperCase();
+      document.getElementById('game-avatar-display').style.background = currentUser.color;
+      document.getElementById('game-gold-display').innerText = currentUser.gold;
+
+      myPath = null;
+      document.getElementById('game-path-display').innerText = 'Pilih Jalur Arena';
+
+      const roomId = mode === 'solo' ? 'room_solo_' + (socket ? socket.id : Date.now()) : 'room_main';
+      if (socket) {
+        socket.emit('join_room', { roomId, phone: currentUser.phone, mode });
+      }
     }
 
     function exitGame() {
-      if (confirm('Keluar ke Menu Utama?')) location.reload();
+      if (confirm('Keluar ke Menu Utama?')) {
+        document.getElementById('game-wrapper').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'grid';
+      }
     }
 
     function selectPath(pathType) {
       myPath = pathType;
-      document.getElementById('my-path').innerText = `Jalur ${pathType}`;
-      document.getElementById('path-modal').style.display = 'none';
+      document.getElementById('game-path-display').innerText = `Jalur ${pathType}`;
+      closeModal('path-modal');
       if (socket) socket.emit('select_path', { path: pathType });
-    }
-
-    function buySabotage(itemType, cost) {
-      const currentGold = parseInt(document.getElementById('my-gold').innerText) || 0;
-      if (currentGold < cost) {
-        showToast('Diamond tidak cukup');
-        return;
-      }
-      myInventory.push(itemType);
-      document.getElementById('my-gold').innerText = currentGold - cost;
-      showToast(`Item ${itemType} dibeli!`);
-      renderInventoryUI();
-      if (socket) socket.emit('buy_sabotage', { itemType, cost });
-    }
-
-    function renderInventoryUI() {
-      const container = document.getElementById('inventory-list');
-      container.innerHTML = '';
-      myInventory.forEach((item, index) => {
-        const chip = document.createElement('div');
-        chip.className = 'item-chip';
-        chip.innerHTML = `❄️ Use ${item}`;
-        chip.onclick = () => useItem(item, index);
-        container.appendChild(chip);
-      });
-    }
-
-    function useItem(itemType, index) {
-      if (!currentGameState) return;
-      const opponent = currentGameState.players.find(p => p.id !== socket?.id);
-      if (!opponent) {
-        showToast('Tidak ada target lawan!');
-        return;
-      }
-      myInventory.splice(index, 1);
-      renderInventoryUI();
-      showToast(`Menggunakan ${itemType} ke ${opponent.name}!`);
-      if (socket) socket.emit('use_sabotage', { itemType, targetId: opponent.id });
     }
 
     function spinWheel() {
       hasSpunThisTurn = true;
-      SoundFX.playRoll();
-      document.getElementById('wheel-modal').style.display = 'none';
+      closeModal('wheel-modal');
       if (socket) socket.emit('req_spin_wheel');
     }
 
     function answerQuiz(optIndex) {
       if (socket) socket.emit('submit_quiz_answer', { selectedIndex: optIndex });
-      document.getElementById('quiz-modal').style.display = 'none';
+      closeModal('quiz-modal');
     }
 
-    function sendTaunt(emoteId) {
-      if (socket) socket.emit('send_taunt', { emoteId });
+    function buySabotage(itemType, cost) {
+      if (!currentUser || currentUser.gold < cost) {
+        showToast('Saldo K-Points tidak cukup!');
+        return;
+      }
+      currentUser.gold -= cost;
+      document.getElementById('game-gold-display').innerText = currentUser.gold;
+      document.getElementById('lobby-gold-display').innerText = currentUser.gold;
+      showToast(`Berhasil membeli ${itemType}`);
     }
 
-    async function buyGold(amount, gold) {
-      if (!currentUser) return;
-      try {
-        const res = await fetch('/api/payment/charge', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: currentUser.phone, amount, goldAmount: gold })
-        });
-        const data = await res.json();
-        if (data.success && typeof snap !== 'undefined') {
-          snap.pay(data.token, {
-            onSuccess: function() {
-              const el = document.getElementById('my-gold');
-              el.innerText = (parseInt(el.innerText) || 0) + gold;
-              showToast('Top Up Berhasil!');
-            },
-            onPending: function() { showToast('Menunggu Pembayaran...'); },
-            onError: function() { showToast('Pembayaran Gagal!'); }
-          });
-        }
-      } catch (err) { showToast('Midtrans Sandbox Ready'); }
+    /* ADMIN LOGIC */
+    function loginAdmin() {
+      const pass = document.getElementById('admin-pass-input').value;
+      if (socket) socket.emit('admin_login', { pass });
+    }
+
+    function savePaymentSettings() {
+      const bank = document.getElementById('pay-bank-name').value;
+      const num = document.getElementById('pay-account-num').value;
+      const qris = document.getElementById('pay-qris-url').value;
+      if (socket) socket.emit('admin_save_payment', { bank, num, qris });
+    }
+
+    function openTopUpModal() {
+      if (socket) socket.emit('get_payment_settings');
+      document.getElementById('topup-modal').style.display = 'flex';
+    }
+
+    function confirmTopUp() {
+      if (currentUser) {
+        currentUser.gold += 5000;
+        document.getElementById('lobby-gold-display').innerText = currentUser.gold;
+      }
+      closeModal('topup-modal');
+      showToast('Top Up 5.000 K-Points Berhasil!');
     }
 
     /* SOCKET LISTENERS */
     if (socket) {
+      socket.on('register_success', (player) => {
+        currentUser = player;
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'grid';
+        document.getElementById('menu-player-name').innerText = player.name;
+        document.getElementById('menu-player-phone').innerText = player.phone;
+        document.getElementById('menu-avatar-display').innerText = player.name.charAt(0).toUpperCase();
+        document.getElementById('menu-avatar-display').style.background = player.color;
+        document.getElementById('lobby-gold-display').innerText = player.gold;
+        showToast('Pendaftaran Berhasil!');
+      });
+
+      socket.on('login_success', (player) => {
+        currentUser = player;
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('menu-section').style.display = 'grid';
+        document.getElementById('menu-player-name').innerText = player.name;
+        document.getElementById('menu-player-phone').innerText = player.phone;
+        document.getElementById('menu-avatar-display').innerText = player.name.charAt(0).toUpperCase();
+        document.getElementById('menu-avatar-display').style.background = player.color;
+        document.getElementById('lobby-gold-display').innerText = player.gold;
+        showToast(`Selamat datang kembali, ${player.name}!`);
+      });
+
       socket.on('room_state_update', (state) => {
-        if (isPaused) return;
         currentGameState = state;
         updateUI();
       });
 
       socket.on('wheel_spun', (data) => {
-        if (isPaused) return;
-        showToast(`Dadu: ${data.steps} Langkah (${data.slotResult?.label || ''})`);
+        showToast(`Dadu: ${data.steps} Langkah`);
         if (data.triggerQuiz && data.quizPrompt) {
           document.getElementById('quiz-question').innerText = data.quizPrompt.question;
-          if (Array.isArray(data.quizPrompt.options)) {
-            data.quizPrompt.options.forEach((optText, idx) => {
-              const btn = document.getElementById(`opt-${idx}`);
-              if (btn) btn.innerText = optText;
-            });
-          }
+          data.quizPrompt.options.forEach((opt, idx) => {
+            const btn = document.getElementById(`opt-${idx}`);
+            if (btn) btn.innerText = opt;
+          });
           document.getElementById('quiz-modal').style.display = 'flex';
         }
       });
 
-      socket.on('quiz_result', (res) => {
-        if (res.isCorrect) SoundFX.playCorrect();
-        else SoundFX.playWrong();
-        showToast(res.message);
+      socket.on('admin_login_success', (data) => {
+        document.getElementById('admin-login-box').style.display = 'none';
+        document.getElementById('admin-dashboard').style.display = 'flex';
+        renderAdminPlayers(data.players);
+        showToast('Login Admin Berhasil');
       });
 
-      socket.on('taunt_received', (data) => {
-        showToast(`${data.senderName}: ${data.emoteId}`);
-      });
-
-      socket.on('game_over', (data) => {
-        SoundFX.playWin();
-        document.getElementById('victory-title').innerText = data.winnerId === socket?.id ? '👑 KEMENANGAN MUTLAK!' : '💔 LAGA SELESAI';
-        document.getElementById('victory-subtitle').innerText = `Pemenang: ${data.winnerName}`;
-        
-        const rankContainer = document.getElementById('victory-rankings');
-        rankContainer.innerHTML = '';
-        data.rankings.forEach((r, idx) => {
-          rankContainer.innerHTML += `<div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; display:flex; justify-between; font-weight:700;">
-            <span>#${idx + 1} ${r.name}</span>
-            <span>${r.gold} K-Points</span>
-          </div>`;
-        });
-        document.getElementById('victory-modal').style.display = 'flex';
+      socket.on('payment_settings_data', (data) => {
+        document.getElementById('topup-bank-display').innerText = data.bank || 'Bank BCA';
+        document.getElementById('topup-num-display').innerText = data.num || '1234567890';
+        if (data.qris) {
+          document.getElementById('topup-qris-container').style.display = 'block';
+          document.getElementById('topup-qris-img').src = data.qris;
+        }
       });
 
       socket.on('error_msg', (msg) => showToast(msg));
     }
 
+    function renderAdminPlayers(players) {
+      const tbody = document.getElementById('admin-player-table');
+      tbody.innerHTML = '';
+      players.forEach(p => {
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.phone}</td>
+            <td>${p.gold} 💎</td>
+            <td><span style="color:#10b981; font-weight:800;">Terdaftar</span></td>
+            <td><button class="btn-action btn-ghost" style="padding:4px 8px; font-size:0.7rem;" onclick="addGoldAdmin('${p.phone}')">+Gold</button></td>
+          </tr>`;
+      });
+    }
+
+    function addGoldAdmin(phone) {
+      if (socket) socket.emit('admin_add_gold', { phone, amount: 2000 });
+    }
+
     function updateUI() {
-      if (!currentGameState || isPaused) return;
+      if (!currentGameState) return;
 
       const list = document.getElementById('player-list');
       list.innerHTML = '';
 
       currentGameState.players.forEach(p => {
         const isMe = socket && p.id === socket.id;
-        if (isMe) document.getElementById('my-gold').innerText = p.gold;
-
         const div = document.createElement('div');
         div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#f8fafc; padding:8px 12px; border-radius:10px; font-size:0.75rem;";
-        div.innerHTML = `<span style="font-weight:700;">${p.name} ${isMe ? '(Kamu)' : ''} ${p.isFrozen ? '❄️' : ''}</span><span style="color:var(--text-muted); font-weight:600;">Kotak ${p.position + 1}</span>`;
+        div.innerHTML = `<span style="font-weight:700;">${p.name} ${isMe ? '(Kamu)' : ''}</span><span style="color:var(--text-muted); font-weight:600;">Kotak ${p.position + 1}</span>`;
         list.appendChild(div);
       });
 
       const isMyTurn = currentGameState.currentTurn === socket?.id;
       const turnIndicator = document.getElementById('turn-indicator');
-
-      // Update Quiz Timer Bar jika modal terbuka
-      if (currentGameState.timeRemaining !== undefined) {
-        const fill = document.getElementById('quiz-timer-fill');
-        if (fill) fill.style.width = `${(currentGameState.timeRemaining / 15) * 100}%`;
-      }
-
-      if (currentGameState.currentTurn !== lastTurnId) {
-        lastTurnId = currentGameState.currentTurn;
-        hasSpunThisTurn = false;
-      }
 
       if (isMyTurn) {
         if (!myPath) {
@@ -650,14 +591,13 @@
         } else if (!hasSpunThisTurn && document.getElementById('quiz-modal').style.display !== 'flex') {
           document.getElementById('wheel-modal').style.display = 'flex';
         }
-        turnIndicator.innerText = `Giliranmu (${currentGameState.timeRemaining}s)`;
+        turnIndicator.innerText = `Giliranmu saat ini (${currentGameState.timeRemaining}s)`;
       } else {
-        document.getElementById('wheel-modal').style.display = 'none';
-        turnIndicator.innerText = `Giliran lawan (${currentGameState.timeRemaining}s)`;
+        closeModal('wheel-modal');
+        turnIndicator.innerText = `Menunggu giliran lawan (${currentGameState.timeRemaining}s)`;
       }
     }
 
-    /* SMOOTH CANVAS RENDER (INTERPOLATION / LERP) */
     function renderBoard() {
       const canvas = document.getElementById('board-canvas');
       if (!canvas) return;
@@ -677,39 +617,31 @@
         ctx.lineWidth = 2;
 
         ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(x, y, 110, 75, 14);
+        if (ctx.roundRect) ctx.roundRect(x, y, 110, 75, 12);
         else ctx.rect(x, y, 110, 75);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#0f172a';
         ctx.font = '800 12px Plus Jakarta Sans';
-        ctx.fillText(`${i + 1}`, x + 12, y + 24);
+        ctx.fillText(`${i + 1}`, x + 10, y + 22);
 
         ctx.fillStyle = isPintar ? '#0284c7' : '#d97706';
         ctx.font = '700 10px Plus Jakarta Sans';
-        ctx.fillText(isPintar ? 'Pintar' : 'Beruntung', x + 12, y + 45);
+        ctx.fillText(isPintar ? 'Pintar' : 'Beruntung', x + 10, y + 42);
       }
 
       if (currentGameState?.players) {
         currentGameState.players.forEach((p, idx) => {
-          const targetX = (p.position % 5) * 130 + 75 + (idx * 12);
-          const targetY = Math.floor(p.position / 5) * 95 + 60;
+          const x = (p.position % 5) * 130 + 75 + (idx * 12);
+          const y = Math.floor(p.position / 5) * 95 + 60;
 
-          if (!playerRenderPos[p.id]) {
-            playerRenderPos[p.id] = { x: targetX, y: targetY };
-          } else {
-            playerRenderPos[p.id].x += (targetX - playerRenderPos[p.id].x) * 0.15;
-            playerRenderPos[p.id].y += (targetY - playerRenderPos[p.id].y) * 0.15;
-          }
-
-          const pos = playerRenderPos[p.id];
           ctx.beginPath();
-          ctx.arc(pos.x, pos.y, 11, 0, Math.PI * 2);
-          ctx.fillStyle = idx === 0 ? '#ff6b00' : (idx === 1 ? '#0284c7' : '#10b981');
+          ctx.arc(x, y, 11, 0, Math.PI * 2);
+          ctx.fillStyle = p.color || (idx === 0 ? '#ff6b00' : '#0284c7');
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 2;
           ctx.stroke();
         });
       }
@@ -720,9 +652,6 @@
       requestAnimationFrame(gameLoop);
     }
     requestAnimationFrame(gameLoop);
-
-    window.addEventListener('resize', adjustResponsiveLayout);
-    window.addEventListener('orientationchange', () => setTimeout(adjustResponsiveLayout, 200));
   </script>
 </body>
 </html>
