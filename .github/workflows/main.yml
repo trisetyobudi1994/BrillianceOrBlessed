@@ -22,12 +22,12 @@ jobs:
         with:
           node-version: 20
 
-      # 3. Setup Java JDK 17 (Paling stabil & kompatibel dengan Gradle/Capacitor)
-      - name: Setup Java JDK 17
+      # 3. Setup Java JDK 21 (Sesuai kebutuhan Capacitor Android terbaru)
+      - name: Setup Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       # 4. Prepare Client, Package.json, Web Assets & Capacitor
       - name: Install Dependencies & Prepare Capacitor
@@ -55,20 +55,19 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      # 5. Fix Jetifier & Patch Gradle
-      - name: Apply Gradle & Kotlin Fixes
+      # 5. Fix Compatibility (Ubah Target Java Source/Target Compatibility ke Java 17)
+      - name: Apply Compatibility & Gradle Fixes
         run: |
           cd BrillianceOrBlessed/client/android
-          
-          # Fix properti Jetifier usang jika ada
-          if [ -f "gradle.properties" ]; then
-            sed -i 's/android.jetifier.blacklist/android.jetifier.ignorelist/g' gradle.properties
-          fi
 
           # Ubah URL gradle wrapper ke versi -bin yang stabil agar tidak HTTP 500
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             sed -i 's/-all.zip/-bin.zip/g' gradle/wrapper/gradle-wrapper.properties
           fi
+
+          # Paksa JavaVersion di build.gradle milik capacitor-android dan app menggunakan Java 17
+          find . -name "build.gradle" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} +
+          find . -name "build.gradle" -exec sed -i 's/VERSION_21/VERSION_17/g' {} +
 
       # 6. Build APK Debug dengan Gradle Wrapper
       - name: Build APK with Gradle
