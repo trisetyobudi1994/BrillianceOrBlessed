@@ -55,7 +55,7 @@ jobs:
           npx cap add android
           npx cap sync android
 
-      # 5. Fix Compatibility (Ubah Target Java Source/Target Compatibility ke Java 17)
+      # 5. Fix Compatibility (Java 17 Target & Kotlin Duplicate Classes)
       - name: Apply Compatibility & Gradle Fixes
         run: |
           cd BrillianceOrBlessed/client/android
@@ -65,9 +65,17 @@ jobs:
             sed -i 's/-all.zip/-bin.zip/g' gradle/wrapper/gradle-wrapper.properties
           fi
 
-          # Paksa JavaVersion di build.gradle milik capacitor-android dan app menggunakan Java 17
+          # Paksa JavaVersion di build.gradle menggunakan Java 17
           find . -name "build.gradle" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} +
           find . -name "build.gradle" -exec sed -i 's/VERSION_21/VERSION_17/g' {} +
+
+          # Eliminasi bentrok Duplicate Class Kotlin (Solusi Error Terakhir)
+          echo '
+          configurations.all {
+              exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
+              exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk8"
+          }
+          ' >> app/build.gradle
 
       # 6. Build APK Debug dengan Gradle Wrapper
       - name: Build APK with Gradle
