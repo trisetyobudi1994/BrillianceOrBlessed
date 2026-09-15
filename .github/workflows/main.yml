@@ -29,7 +29,7 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      # 4. Prepare Client, Package.json, Web Assets & Capacitor
+      # 4. Prepare Client, Web Assets & Capacitor (FIXED: Copy semua aset)
       - name: Install Dependencies & Prepare Capacitor
         run: |
           cd BrillianceOrBlessed/client
@@ -39,13 +39,13 @@ jobs:
             echo '{"name": "brilliance-client", "version": "1.0.0"}' > package.json
           fi
 
-          # Buat direktori www dan salin index.html secara eksplisit
+          # Cari lokasi folder yang mengandung index.html
+          INDEX_PATH=$(find . -maxdepth 3 -iname "index.html" -not -path "*/www/*" -not -path "*/android/*" -not -path "*/node_modules/*" | head -n 1)
+          ASSET_DIR=$(dirname "$INDEX_PATH")
+          
+          # Salin SEMUA file (HTML, JS, CSS, Audio, Gambar) ke folder www dengan aman
           mkdir -p www
-          if [ -f index.html ]; then
-            cp index.html www/index.html
-          else
-            find . -maxdepth 3 -iname "index.html" -not -path "./www/*" -exec cp {} www/index.html \;
-          fi
+          rsync -a "$ASSET_DIR"/ www/ --exclude=www --exclude=android --exclude=node_modules --exclude=.git
 
           # Install Capacitor CLI & Core
           npm install @capacitor/core @capacitor/cli @capacitor/android
@@ -69,7 +69,7 @@ jobs:
           find . -name "build.gradle" -exec sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' {} +
           find . -name "build.gradle" -exec sed -i 's/VERSION_21/VERSION_17/g' {} +
 
-          # Eliminasi bentrok Duplicate Class Kotlin (Solusi Error Terakhir)
+          # Eliminasi bentrok Duplicate Class Kotlin
           echo '
           configurations.all {
               exclude group: "org.jetbrains.kotlin", module: "kotlin-stdlib-jdk7"
