@@ -35,6 +35,19 @@ if (process.env.MONGO_URI) {
 // ==========================================
 const rooms = {};
 
+// Fungsi pembantu untuk membuang properti internal seperti timerInterval sebelum dikirim ke Socket.io
+function getCleanRoomData(room) {
+    if (!room) return null;
+    return {
+        id: room.id,
+        players: room.players,
+        currentTurn: room.currentTurn,
+        timeRemaining: room.timeRemaining,
+        arenaReady: room.arenaReady,
+        gameState: room.gameState
+    };
+}
+
 // Fungsi untuk memindahkan giliran ke pemain selanjutnya
 function nextTurn(roomId) {
     const room = rooms[roomId];
@@ -46,8 +59,8 @@ function nextTurn(roomId) {
     room.currentTurn = room.players[nextIndex].id;
     room.timeRemaining = 30; // Reset waktu menjadi 30 detik
 
-    // Broadcast update state ke semua pemain di ruangan
-    io.to(roomId).emit("room_state_update", room);
+    // Broadcast update state bersih ke semua pemain di ruangan
+    io.to(roomId).emit("room_state_update", getCleanRoomData(room));
 }
 
 // Sistem Timer Real-time (Berjalan setiap 1 detik)
@@ -64,8 +77,8 @@ function startRoomTimer(roomId) {
             // Waktu habis, pindah giliran otomatis
             nextTurn(roomId);
         } else {
-            // Update waktu ke UI
-            io.to(roomId).emit("room_state_update", room);
+            // Update waktu ke UI menggunakan data bersih
+            io.to(roomId).emit("room_state_update", getCleanRoomData(room));
         }
     }, 1000);
 }
@@ -89,7 +102,8 @@ io.on("connection", (socket) => {
                 currentTurn: socket.id, // Giliran pertama diberikan ke pembuat room
                 timeRemaining: 30,
                 arenaReady: true,       // WAJIB: Agar teks INITIALIZING hilang di Frontend
-                gameState: 'PLAYING'    // WAJIB
+                gameState: 'PLAYING',   // WAJIB
+                timerInterval: null
             };
             startRoomTimer(roomId);
         }
@@ -107,8 +121,8 @@ io.on("connection", (socket) => {
             });
         }
 
-        // Kirim update state ke Frontend untuk mengubah UI
-        io.to(roomId).emit("room_state_update", rooms[roomId]);
+        // Kirim update state bersih ke Frontend untuk mengubah UI
+        io.to(roomId).emit("room_state_update", getCleanRoomData(rooms[roomId]));
     });
 
     // Fitur Taunting Emoji
@@ -162,7 +176,7 @@ io.on("connection", (socket) => {
                 // Jika pemain yang disconnect sedang giliran, pindah ke pemain lain
                 nextTurn(roomId);
             } else {
-                io.to(roomId).emit("room_state_update", room);
+                io.to(roomId).emit("room_state_update", getCleanRoomData(room));
             }
         }
     });
