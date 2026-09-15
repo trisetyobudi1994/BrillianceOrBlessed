@@ -1,7 +1,6 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const crypto = require('crypto');
 
 const app = express();
 app.use(express.json());
@@ -10,51 +9,58 @@ app.use(express.static('client'));
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
-// Database Sementara (In-Memory)
+// DATABASE PEMAIN TERSIMPAN DI SERVER (Key: Phone Number)
+const playersDB = {}; 
 const rooms = {};
-const userBalances = {}; // phone -> gold
+let paymentSettings = {
+  bank: 'Bank BCA',
+  num: '8830-1234-5678 a.n Arena Esports',
+  qris: ''
+};
 
-/* 1. MIDTRANS WEBHOOK NOTIFICATION ROUTE (SERVER-SIDE VERIFICATION) */
-app.post('/api/payment/notification', (req, res) => {
-  const notification = req.body;
-  const serverKey = process.env.MIDTRANS_SERVER_KEY || 'SB-Mid-server-YOUR_SERVER_KEY';
-
-  // Verifikasi Signature Key Midtrans
-  const signatureInput = notification.order_id + notification.status_code + notification.gross_amount + serverKey;
-  const expectedSignature = crypto.createHash('sha512').update(signatureInput).digest('hex');
-
-  if (notification.signature_key !== expectedSignature) {
-    return res.status(403).json({ message: 'Signature tidak valid' });
-  }
-
-  const transactionStatus = notification.transaction_status;
-  const fraudStatus = notification.fraud_status;
-
-  if (transactionStatus === 'capture' || transactionStatus === 'settlement') {
-    if (fraudStatus === 'challenge') {
-      // Pembayaran mencurigakan
-    } else if (fraudStatus === 'accept' || !fraudStatus) {
-      // Pembayaran sukses disetujui
-      const phone = notification.custom_field1;
-      const goldToAdd = parseInt(notification.custom_field2) || 5000;
-      
-      userBalances[phone] = (userBalances[phone] || 1000) + goldToAdd;
-      console.log(`[PAYMENT SUCCESS] Phone: ${phone}, +${goldToAdd} Gold`);
-    }
-  }
-
-  res.status(200).json({ status: 'OK' });
-});
-
-/* 2. GAME ENGINE & SOCKET LOGIC */
 const QUIZ_BANK = [
-  { question: "Hero manakah yang memiliki role Assassin di MOBA?", options: ["Lancelot", "Tigreal", "Angela", "Gord"], correct: 0 },
-  { question: "Apa sebutan untuk mengeliminasi 5 musuh sekaligus?", options: ["Double Kill", "Triple Kill", "Savage / Penta", "Maniac"], correct: 2 },
-  { question: "Item apa yang memberikan efek lifesteal fisik?", options: ["HAAS Claw", "Demon Shoes", "Holy Crystal", "Dominance Ice"], correct: 0 }
+  { question: "Hero apakah yang bertipe Assassin?", options: ["Lancelot", "Tigreal", "Angela", "Gord"], correct: 0 },
+  { question: "Apa sebutan untuk 5 kill beruntun?", options: ["Double Kill", "Savage", "Maniac", "Triple Kill"], correct: 1 }
 ];
 
 io.on('connection', (socket) => {
-  socket.on('join_room', ({ roomId, phone, name, mode }) => {
+  
+  // 1. PENDAFTARAN PEMAIN BARU
+  socket.on('player_register', ({ name, phone, color }) => {
+    if (playersDB[phone]) {
+      socket.emit('error_msg', 'Nomor HP sudah terdaftar. Silakan lakukan Login!');
+      return;
+    }
+
+    const newPlayer = {
+      phone,
+      name,
+      color: color || '#ff6b00',
+      gold: 1000
+    };
+
+    playersDB[phone] = newPlayer;
+    socket.emit('register_success', newPlayer);
+  });
+
+  // 2. LOGIN PEMAIN TERDAFTAR
+  socket.on('player_login', ({ phone }) => {
+    if (!playersDB[phone]) {
+      socket.emit('error_msg', 'Nomor HP belum terdaftar. Silakan daftar dulu!');
+      return;
+    }
+
+    socket.emit('login_success', playersDB[phone]);
+  });
+
+  // 3. JOIN ROOM GAMEPLAY
+  socket.on('join_room', ({ roomId, phone, mode }) => {
+    const playerProfile = playersDB[phone];
+    if (!playerProfile) {
+      socket.emit('error_msg', 'Sesi tidak valid, silakan login kembali.');
+      return;
+    }
+
     socket.join(roomId);
     socket.roomId = roomId;
 
@@ -75,27 +81,26 @@ io.on('connection', (socket) => {
       player = {
         id: socket.id,
         phone,
-        name,
+        name: playerProfile.name,
+        color: playerProfile.color,
         position: 0,
-        gold: userBalances[phone] || 1000,
-        path: null,
-        isFrozen: false
+        gold: playerProfile.gold,
+        path: null
       };
       room.players.push(player);
     } else {
-      player.id = socket.id; // Update socket id jika reconnect
+      player.id = socket.id;
     }
 
     if (mode === 'solo' && room.players.length === 1) {
-      // Tambahkan BOT untuk Solo Mode
       room.players.push({
         id: 'bot_ai',
-        phone: '000000',
+        phone: '0000',
         name: 'AI Training Bot',
+        color: '#2563eb',
         position: 0,
         gold: 1000,
-        path: 'PINTAR',
-        isFrozen: false
+        path: 'PINTAR'
       });
     }
 
@@ -106,40 +111,29 @@ io.on('connection', (socket) => {
   socket.on('select_path', ({ path }) => {
     const room = rooms[socket.roomId];
     if (!room) return;
-    const player = room.players.find(p => p.id === socket.id);
-    if (player) player.path = path;
+    const p = room.players.find(player => player.id === socket.id);
+    if (p) p.path = path;
     broadcastRoomState(socket.roomId);
   });
 
   socket.on('req_spin_wheel', () => {
     const room = rooms[socket.roomId];
     if (!room) return;
-    const player = room.players[room.currentTurnIndex];
-    if (!player || player.id !== socket.id) return; // Anti-Cheat: Hanya pemain gilirannya yang bisa spin
+    const p = room.players[room.currentTurnIndex];
+    if (!p || p.id !== socket.id) return;
 
     const steps = Math.floor(Math.random() * 6) + 1;
-    player.position = Math.min(19, player.position + steps);
+    p.position = Math.min(19, p.position + steps);
 
-    const triggerQuiz = (player.position % 2 === 0); // Kotak genap = Kuis
+    const triggerQuiz = (p.position % 2 === 0);
     let quizPrompt = null;
 
     if (triggerQuiz) {
       quizPrompt = QUIZ_BANK[Math.floor(Math.random() * QUIZ_BANK.length)];
-      room.currentQuiz = { correct: quizPrompt.correct, playerId: player.id };
+      room.currentQuiz = { correct: quizPrompt.correct, playerId: p.id };
     }
 
     io.to(socket.roomId).emit('wheel_spun', { steps, triggerQuiz, quizPrompt });
-
-    // Cek Kemenangan
-    if (player.position >= 19) {
-      io.to(socket.roomId).emit('game_over', {
-        winnerId: player.id,
-        winnerName: player.name,
-        rankings: [...room.players].sort((a, b) => b.position - a.position)
-      });
-      clearInterval(room.timer);
-      return;
-    }
 
     if (!triggerQuiz) {
       nextTurn(socket.roomId);
@@ -151,46 +145,38 @@ io.on('connection', (socket) => {
     if (!room || !room.currentQuiz) return;
 
     const isCorrect = (selectedIndex === room.currentQuiz.correct);
-    const player = room.players.find(p => p.id === socket.id);
+    const p = room.players.find(player => player.id === socket.id);
 
-    if (player) {
-      if (isCorrect) player.gold += 300;
-      else player.gold = Math.max(0, player.gold - 100);
-    }
-
-    socket.emit('quiz_result', {
-      isCorrect,
-      message: isCorrect ? 'Jawaban Tepat! +300 Diamond' : 'Jawaban Salah! -100 Diamond'
-    });
+    if (p && isCorrect) p.gold += 300;
 
     delete room.currentQuiz;
     nextTurn(socket.roomId);
   });
 
-  socket.on('use_sabotage', ({ itemType, targetId }) => {
-    const room = rooms[socket.roomId];
-    if (!room) return;
-    const target = room.players.find(p => p.id === targetId);
-    if (target && itemType === 'FREEZE') {
-      target.isFrozen = true;
-      io.to(socket.roomId).emit('error_msg', `${target.name} terkena status FREEZE untuk 1 giliran!`);
-      broadcastRoomState(socket.roomId);
+  // 4. OTENTIKASI & AKSES ADMIN
+  socket.on('admin_login', ({ pass }) => {
+    if (pass === 'admin123') { // Passcode default Admin
+      socket.emit('admin_login_success', {
+        players: Object.values(playersDB)
+      });
+    } else {
+      socket.emit('error_msg', 'Kode Akses Admin Salah!');
     }
   });
 
-  socket.on('send_taunt', ({ emoteId }) => {
-    const room = rooms[socket.roomId];
-    if (!room) return;
-    const player = room.players.find(p => p.id === socket.id);
-    io.to(socket.roomId).emit('taunt_received', { senderName: player ? player.name : 'Pemain', emoteId });
+  socket.on('admin_save_payment', ({ bank, num, qris }) => {
+    paymentSettings = { bank, num, qris };
+    socket.emit('error_msg', 'Pengaturan Pembayaran Berhasil Disimpan!');
   });
 
-  socket.on('disconnect', () => {
-    const room = rooms[socket.roomId];
-    if (room) {
-      // Gantikan peran pemain yang putus koneksi dengan BOT
-      const p = room.players.find(p => p.id === socket.id);
-      if (p) p.name += ' (Bot)';
+  socket.on('get_payment_settings', () => {
+    socket.emit('payment_settings_data', paymentSettings);
+  });
+
+  socket.on('admin_add_gold', ({ phone, amount }) => {
+    if (playersDB[phone]) {
+      playersDB[phone].gold += amount;
+      socket.emit('admin_login_success', { players: Object.values(playersDB) });
     }
   });
 });
@@ -203,21 +189,11 @@ function nextTurn(roomId) {
   room.timeRemaining = 15;
 
   const currentP = room.players[room.currentTurnIndex];
-  
-  // Jika pemain terkena efek Freeze, lewati gilirannya
-  if (currentP.isFrozen) {
-    currentP.isFrozen = false;
-    io.to(roomId).emit('error_msg', `Giliran ${currentP.name} dilewati karena FREEZE!`);
-    nextTurn(roomId);
-    return;
-  }
-
-  // Jika giliran BOT AI
-  if (currentP.id === 'bot_ai') {
+  if (currentP && currentP.id === 'bot_ai') {
     setTimeout(() => {
       currentP.position = Math.min(19, currentP.position + Math.floor(Math.random() * 4) + 1);
       nextTurn(roomId);
-    }, 1500);
+    }, 1200);
   }
 
   broadcastRoomState(roomId);
@@ -225,7 +201,7 @@ function nextTurn(roomId) {
 
 function startRoomTimer(roomId) {
   const room = rooms[roomId];
-  if (room.timer) return;
+  if (!room || room.timer) return;
 
   room.timer = setInterval(() => {
     room.timeRemaining--;
@@ -248,4 +224,4 @@ function broadcastRoomState(roomId) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server aktif di port ${PORT}`));
